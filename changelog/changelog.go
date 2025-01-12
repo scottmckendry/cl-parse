@@ -40,7 +40,7 @@ func (p *Parser) Parse(content string) ([]ChangelogEntry, error) {
 	var currentSection string
 
 	versionRegex := regexp.MustCompile(
-		`## \[(?:v)?([\d.]+(?:-[a-zA-Z0-9]+(?:\.[0-9]+)?)?)\]\((.*?)\) \((\d{4}-\d{2}-\d{2})\)`,
+		`## (?:\[)?(?:v)?([\d.]+(?:-[a-zA-Z0-9]+(?:\.[0-9]+)?)?)\]?(?:\((.*?)\))? \((\d{4}-\d{2}-\d{2})\)`,
 	)
 	changeRegex := regexp.MustCompile(
 		`\* (?:\*\*(.*?)\*\*: )?(.+?)\s*(?:\((?:#(\d+))?\)?)?\s*(?:\((.*?)\))?$`,

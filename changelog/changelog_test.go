@@ -17,7 +17,7 @@ func TestParse(t *testing.T) {
 			name: "parses basic changelog",
 			input: `# Changelog
 
-## [v1.0.0](https://github.com/user/repo/compare/v0.1.0...v1.0.0) (2023-01-01)
+## [v1.0.0](https://github.com/user/repo/compare/v0.1.0...v1.0.0) (2025-01-01)
 
 ### Features
 
@@ -31,7 +31,7 @@ func TestParse(t *testing.T) {
 			want: []ChangelogEntry{
 				{
 					Version:    "1.0.0",
-					Date:       mustParseTime("2023-01-01"),
+					Date:       mustParseTime("2025-01-01"),
 					CompareURL: "https://github.com/user/repo/compare/v0.1.0...v1.0.0",
 					Changes: map[string][]Change{
 						"Features": {
@@ -58,7 +58,7 @@ func TestParse(t *testing.T) {
 		{
 			name: "parses version with prerelease",
 			input: `# Changelog
-## [v1.0.0-alpha.1](https://github.com/user/repo/compare/v0.1.0...v1.0.0-alpha.1) (2023-01-01)
+## [v1.0.0-alpha.1](https://github.com/user/repo/compare/v0.1.0...v1.0.0-alpha.1) (2025-01-01)
 
 ### Features
 
@@ -67,7 +67,7 @@ func TestParse(t *testing.T) {
 			want: []ChangelogEntry{
 				{
 					Version:    "1.0.0-alpha.1",
-					Date:       mustParseTime("2023-01-01"),
+					Date:       mustParseTime("2025-01-01"),
 					CompareURL: "https://github.com/user/repo/compare/v0.1.0...v1.0.0-alpha.1",
 					Changes: map[string][]Change{
 						"Features": {
@@ -79,7 +79,31 @@ func TestParse(t *testing.T) {
 				},
 			},
 		},
-    }
+		{
+			name: "parses version without URL",
+			input: `# Changelog
+## 1.0.0 (2025-01-01)
+
+### Features
+
+* basic feature
+`,
+			want: []ChangelogEntry{
+				{
+					Version:    "1.0.0",
+					Date:       mustParseTime("2025-01-01"),
+					CompareURL: "",
+					Changes: map[string][]Change{
+						"Features": {
+							{
+								Description: "basic feature",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := NewParser()
