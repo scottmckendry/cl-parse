@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	"cl-parse/changelog"
 	"cl-parse/git"
@@ -26,6 +29,7 @@ var cmd = &cobra.Command{
 		latest, _ := cmd.Flags().GetBool("latest")
 		release, _ := cmd.Flags().GetString("release")
 		includeBody, _ := cmd.Flags().GetBool("include-body")
+		format, _ := cmd.Flags().GetString("format")
 
 		if ver {
 			fmt.Printf("cl-parse v%s\n", VERSION)
@@ -58,12 +62,12 @@ var cmd = &cobra.Command{
 				fmt.Println("No changelog entries found")
 				os.Exit(1)
 			}
-			jsonData, err := json.MarshalIndent(entries[0], "", "  ")
+			outputData, err := marshalWithFormat(entries[0], format)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			fmt.Println(string(jsonData))
+			fmt.Println(string(outputData))
 			return
 		}
 
@@ -71,12 +75,12 @@ var cmd = &cobra.Command{
 			found := false
 			for _, entry := range entries {
 				if entry.Version == release {
-					jsonData, err := json.MarshalIndent(entry, "", "  ")
+					outputData, err := marshalWithFormat(entry, format)
 					if err != nil {
 						fmt.Println(err)
 						os.Exit(1)
 					}
-					fmt.Println(string(jsonData))
+					fmt.Println(string(outputData))
 					found = true
 					break
 				}
@@ -89,12 +93,12 @@ var cmd = &cobra.Command{
 		}
 
 		// default to printing all entries
-		jsonData, err := json.MarshalIndent(entries, "", "  ")
+		outputData, err := marshalWithFormat(entries, format)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println(string(jsonData))
+		fmt.Println(string(outputData))
 	},
 }
 
@@ -110,4 +114,18 @@ func init() {
 	cmd.Flags().BoolP("latest", "l", false, "display the most recent version from the changelog")
 	cmd.Flags().StringP("release", "r", "", "display the changelog entry for a specific release")
 	cmd.Flags().Bool("include-body", false, "include the full commit body in changelog entry")
+	cmd.Flags().StringP("format", "f", "json", "output format (json, yaml, or toml)")
+}
+
+func marshalWithFormat(v interface{}, format string) ([]byte, error) {
+	switch strings.ToLower(format) {
+	case "json":
+		return json.MarshalIndent(v, "", "  ")
+	case "yaml":
+		return yaml.Marshal(v)
+	case "toml":
+		return toml.Marshal(v)
+	default:
+		return nil, fmt.Errorf("unsupported format: %s", format)
+	}
 }

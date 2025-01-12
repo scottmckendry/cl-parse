@@ -11,18 +11,18 @@ import (
 )
 
 type ChangelogEntry struct {
-	Version    string              `json:"version"`
-	Date       time.Time           `json:"date"`
-	CompareURL string              `json:"compareUrl"`
-	Changes    map[string][]Change `json:"changes"`
+    Version    string              `json:"version" yaml:"version" toml:"version"`
+    Date       time.Time           `json:"date" yaml:"date" toml:"date"`
+    CompareURL string              `json:"compareUrl" yaml:"compareUrl" toml:"compareUrl"`
+    Changes    map[string][]Change `json:"changes" yaml:"changes" toml:"changes"`
 }
 
 type Change struct {
-	Scope       string `json:"scope,omitempty"`
-	Description string `json:"description"`
-	PR          string `json:"pr,omitempty"`
-	Commit      string `json:"commit,omitempty"`
-	CommitBody  string `json:"commitBody,omitempty"`
+    Scope       string `json:"scope,omitempty" yaml:"scope,omitempty" toml:"scope,omitempty"`
+    Description string `json:"description" yaml:"description" toml:"description"`
+    PR          string `json:"pr,omitempty" yaml:"pr,omitempty" toml:"pr,omitempty"`
+    Commit      string `json:"commit,omitempty" yaml:"commit,omitempty" toml:"commit,omitempty"`
+    CommitBody  string `json:"commitBody,omitempty" yaml:"commitBody,omitempty" toml:"commitBody,omitempty"`
 }
 
 type Parser struct {
