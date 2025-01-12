@@ -103,6 +103,36 @@ func TestParse(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "extracts hashes from commit links",
+			input: `# Changelog
+## [v1.0.0](https://github.com/user/repo/compare/v0.1.0...v1.0.0) (2025-01-01)
+
+### Features
+
+* basic feature ([commit](https://github.com/user/repo/commit/abc123))
+* another feature ([link text](https://github.com/user/repo/commit/def456))
+`,
+			want: []ChangelogEntry{
+				{
+					Version:    "1.0.0",
+					Date:       mustParseTime("2025-01-01"),
+					CompareURL: "https://github.com/user/repo/compare/v0.1.0...v1.0.0",
+					Changes: map[string][]Change{
+						"Features": {
+							{
+								Description: "basic feature",
+								Commit:      "abc123",
+							},
+							{
+								Description: "another feature",
+								Commit:      "def456",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
