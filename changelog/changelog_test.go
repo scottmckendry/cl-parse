@@ -16,12 +16,12 @@ func createTestEntry(version, date string, compareURL string, changes map[string
 	}
 }
 
-func createTestChange(description string, scope string, pr string, commit string) Change {
+func createTestChange(description string, scope string, commit string, relatedItems []string) Change {
 	return Change{
-		Description: description,
-		Scope:       scope,
-		PR:          pr,
-		Commit:      commit,
+		Description:  description,
+		Scope:        scope,
+		Commit:       commit,
+		RelatedItems: relatedItems,
 	}
 }
 
@@ -40,7 +40,7 @@ func TestParse(t *testing.T) {
 
 ### Features
 
-* **api**: add new endpoint (#123)
+* **api**: add new endpoint
 * basic feature (1a196c09283903991da080552e3aa980ac64fec9)
 
 ### Bug Fixes
@@ -50,11 +50,11 @@ func TestParse(t *testing.T) {
 			want: []ChangelogEntry{
 				createTestEntry("1.0.0", "2025-01-01", "https://github.com/user/repo/compare/v0.1.0...v1.0.0", map[string][]Change{
 					"Features": {
-						createTestChange("add new endpoint", "api", "123", ""),
-						createTestChange("basic feature", "", "", "1a196c09283903991da080552e3aa980ac64fec9"),
+						createTestChange("add new endpoint", "api", "", nil),
+						createTestChange("basic feature", "", "1a196c09283903991da080552e3aa980ac64fec9", nil),
 					},
 					"Bug Fixes": {
-						createTestChange("fix button alignment", "ui", "", ""),
+						createTestChange("fix button alignment", "ui", "", nil),
 					},
 				}),
 			},
@@ -71,7 +71,7 @@ func TestParse(t *testing.T) {
 			want: []ChangelogEntry{
 				createTestEntry("1.0.0-alpha.1", "2025-01-01", "https://github.com/user/repo/compare/v0.1.0...v1.0.0-alpha.1", map[string][]Change{
 					"Features": {
-						createTestChange("basic feature", "", "", ""),
+						createTestChange("basic feature", "", "", nil),
 					},
 				}),
 			},
@@ -83,12 +83,12 @@ func TestParse(t *testing.T) {
 
 ### Features
 
-* basic feature
+* basic feature #456
 `,
 			want: []ChangelogEntry{
 				createTestEntry("1.0.0", "2025-01-01", "", map[string][]Change{
 					"Features": {
-						createTestChange("basic feature", "", "", ""),
+						createTestChange("basic feature #456", "", "", []string{"456"}),
 					},
 				}),
 			},
@@ -107,9 +107,9 @@ func TestParse(t *testing.T) {
 			want: []ChangelogEntry{
 				createTestEntry("1.0.0", "2025-01-01", "https://github.com/user/repo/compare/v0.1.0...v1.0.0", map[string][]Change{
 					"Features": {
-						createTestChange("basic feature", "", "", "8f5b75c6ba6c525e29463e2a96fec119e426e283"),
-						createTestChange("another feature", "", "", "22822a9f19442b51d952b550e73ad3c229583371"),
-						createTestChange("some docs", "", "", ""),
+						createTestChange("basic feature", "", "8f5b75c6ba6c525e29463e2a96fec119e426e283", nil),
+						createTestChange("another feature", "", "22822a9f19442b51d952b550e73ad3c229583371", nil),
+						createTestChange("some docs", "", "", nil),
 					},
 				}),
 			},
@@ -145,7 +145,7 @@ func TestGetLatest(t *testing.T) {
 
 ## [v2.0.0](https://github.com/user/repo/compare/v1.0.0...v2.0.0) (2025-02-01)
 ### Features
-* new feature
+* new feature #123
 
 ## [v1.0.0](https://github.com/user/repo/compare/v0.1.0...v1.0.0) (2025-01-01)
 ### Features
@@ -174,7 +174,7 @@ func TestGetVersion(t *testing.T) {
 
 ## [v2.0.0](https://github.com/user/repo/compare/v1.0.0...v2.0.0) (2025-02-01)
 ### Features
-* new feature
+* new feature #123
 
 ## [v1.0.0](https://github.com/user/repo/compare/v0.1.0...v1.0.0) (2025-01-01)
 ### Features

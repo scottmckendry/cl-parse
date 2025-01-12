@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 const (
 	dateFormat     = "2006-01-02"
 	versionPattern = `## (?:\[)?(?:v)?([\d.]+(?:-[a-zA-Z0-9]+(?:\.[0-9]+)?)?)\]?(?:\((.*?)\))? \((\d{4}-\d{2}-\d{2})\)`
-	changePattern  = `\* (?:\*\*(.*?)\*\*: )?(.+?)\s*(?:\((?:#(\d+))?\)?)?\s*(?:\((.*?)\))?(?:,\s*closes.*)?$`
+	changePattern  = `\* (?:\*\*(.*?)\*\*: )?(.+?)\s*(?:\((.*?)\))?(?:,\s*closes.*)?$`
 )
 
 type ChangelogEntry struct {
@@ -24,11 +25,11 @@ type ChangelogEntry struct {
 }
 
 type Change struct {
-	Scope       string `json:"scope,omitempty" yaml:"scope,omitempty" toml:"scope,omitempty"`
-	Description string `json:"description" yaml:"description" toml:"description"`
-	PR          string `json:"pr,omitempty" yaml:"pr,omitempty" toml:"pr,omitempty"`
-	Commit      string `json:"commit,omitempty" yaml:"commit,omitempty" toml:"commit,omitempty"`
-	CommitBody  string `json:"commitBody,omitempty" yaml:"commitBody,omitempty" toml:"commitBody,omitempty"`
+	Scope        string   `json:"scope,omitempty" yaml:"scope,omitempty" toml:"scope,omitempty"`
+	Description  string   `json:"description" yaml:"description" toml:"description"`
+	Commit       string   `json:"commit,omitempty" yaml:"commit,omitempty" toml:"commit,omitempty"`
+	CommitBody   string   `json:"commitBody,omitempty" yaml:"commitBody,omitempty" toml:"commitBody,omitempty"`
+	RelatedItems []string `json:"relatedItems,omitempty" yaml:"relatedItems,omitempty" toml:"relatedItems,omitempty"`
 }
 
 type Parser struct {
@@ -126,17 +127,24 @@ func (p *Parser) parseChange(line string, changeRegex *regexp.Regexp, currentSec
 	}
 
 	change := Change{
-		Scope:       matches[1],
-		Description: matches[2],
+		Scope:        matches[1],
+		Description:  matches[2],
+		RelatedItems: extractRelatedItems(matches[2]), // Extract from description
 	}
 
 	if matches[3] != "" {
-		change.PR = matches[3]
-	}
-	if matches[4] != "" {
-		change.Commit = parseCommitHashFromLink(matches[4])
+		change.Commit = parseCommitHashFromLink(matches[3])
 		if err := p.addCommitBody(&change); err != nil {
 			return err
+		}
+		// Extract related items from commit body if available
+		if change.CommitBody != "" {
+			bodyItems := extractRelatedItems(change.CommitBody)
+			for _, item := range bodyItems {
+				if !slices.Contains(change.RelatedItems, item) {
+					change.RelatedItems = append(change.RelatedItems, item)
+				}
+			}
 		}
 	}
 
@@ -175,4 +183,21 @@ func parseCommitHashFromLink(link string) string {
 	}
 
 	return ""
+}
+
+func extractRelatedItems(text string) []string {
+	regex := regexp.MustCompile(`#(\d+)`)
+	matches := regex.FindAllStringSubmatch(text, -1)
+
+	seen := make(map[string]bool)
+	var items []string
+
+	for _, match := range matches {
+		if !seen[match[1]] {
+			items = append(items, match[1])
+			seen[match[1]] = true
+		}
+	}
+
+	return items
 }
