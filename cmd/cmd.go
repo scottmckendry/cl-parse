@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cl-parse/changelog"
+	"cl-parse/git"
 )
 
 const VERSION = "0.2.0" // x-release-please-version
@@ -39,6 +40,12 @@ var cmd = &cobra.Command{
 
 		parser := changelog.NewParser()
 		parser.IncludeBody = includeBody
+		if parser.IncludeBody {
+			if !git.IsGitRepo(".") {
+				fmt.Println("Cannot fetch commits: Not a git repository")
+				os.Exit(1)
+			}
+		}
 
 		entries, err := parser.Parse(string(content))
 		if err != nil {
