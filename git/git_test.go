@@ -151,3 +151,55 @@ func TestGetCommmitBodyFromSha(t *testing.T) {
 		})
 	}
 }
+
+func TestIsValidSha(t *testing.T) {
+	tests := []struct {
+		name string
+		sha  string
+		want bool
+	}{
+		{
+			name: "valid full sha",
+			sha:  "8f5b75c6ba6c525e29463e2a96fec119e426e283",
+			want: true,
+		},
+		{
+			name: "invalid characters",
+			sha:  "8f5b75c6ba6c525e29463e2a96fec119e426e28g",
+			want: false,
+		},
+		{
+			name: "too short",
+			sha:  "8f5b75c6",
+			want: false,
+		},
+		{
+			name: "too long",
+			sha:  "8f5b75c6ba6c525e29463e2a96fec119e426e2833",
+			want: false,
+		},
+		{
+			name: "empty string",
+			sha:  "",
+			want: false,
+		},
+		{
+			name: "valid characters but wrong length",
+			sha:  "8f5b75c6ba6c525e29463e2a96fec119e426e",
+			want: false,
+		},
+		{
+			name: "uppercase characters",
+			sha:  "8F5B75C6BA6C525E29463E2A96FEC119E426E283",
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsValidSha(tt.sha); got != tt.want {
+				t.Errorf("IsValidSha() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

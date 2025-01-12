@@ -22,7 +22,7 @@ func TestParse(t *testing.T) {
 ### Features
 
 * **api**: add new endpoint (#123)
-* basic feature (abc123)
+* basic feature (1a196c09283903991da080552e3aa980ac64fec9)
 
 ### Bug Fixes
 
@@ -42,7 +42,7 @@ func TestParse(t *testing.T) {
 							},
 							{
 								Description: "basic feature",
-								Commit:      "abc123",
+								Commit:      "1a196c09283903991da080552e3aa980ac64fec9",
 							},
 						},
 						"Bug Fixes": {
@@ -110,8 +110,9 @@ func TestParse(t *testing.T) {
 
 ### Features
 
-* basic feature ([commit](https://github.com/user/repo/commit/abc123))
-* another feature ([link text](https://github.com/user/repo/commit/def456))
+* basic feature ([commit](https://github.com/user/repo/commit/8f5b75c6ba6c525e29463e2a96fec119e426e283))
+* another feature ([link text](https://github.com/user/repo/commit/22822a9f19442b51d952b550e73ad3c229583371))
+* some docs ([docs link text](https://example.com/docs))
 `,
 			want: []ChangelogEntry{
 				{
@@ -122,11 +123,14 @@ func TestParse(t *testing.T) {
 						"Features": {
 							{
 								Description: "basic feature",
-								Commit:      "abc123",
+								Commit:      "8f5b75c6ba6c525e29463e2a96fec119e426e283",
 							},
 							{
 								Description: "another feature",
-								Commit:      "def456",
+								Commit:      "22822a9f19442b51d952b550e73ad3c229583371",
+							},
+							{
+								Description: "some docs",
 							},
 						},
 					},

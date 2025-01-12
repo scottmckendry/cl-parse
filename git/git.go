@@ -39,3 +39,18 @@ func GetCommmitBodyFromSha(path string, sha string) (string, error) {
 
 	return strings.Join(parts, "\n"), nil
 }
+
+// IsValidSha checks if the given string is in the correct format for a git SHA
+func IsValidSha(sha string) bool {
+	if len(sha) != 40 {
+		return false
+	}
+
+	for _, r := range sha {
+		if (r < '0' || r > '9') && (r < 'a' || r > 'f') {
+			return false
+		}
+	}
+
+	return true
+}

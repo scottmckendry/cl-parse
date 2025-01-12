@@ -108,16 +108,9 @@ func (p *Parser) Parse(content string) ([]ChangelogEntry, error) {
 					change.PR = matches[3]
 				}
 				if matches[4] != "" {
-					// extract the hash from the md link
-					parts := strings.Split(matches[4], "/")
-					change.Commit = parts[len(parts)-1]
+					change.Commit = parseCommitHashFromLink(matches[4])
 
-					// remove the closing parenthesis
-					if change.Commit[len(change.Commit)-1] == ')' {
-						change.Commit = change.Commit[:len(change.Commit)-1]
-					}
-
-					if p.IncludeBody {
+					if p.IncludeBody && change.Commit != "" {
 						var err error
 						change.CommitBody, err = git.GetCommmitBodyFromSha(".", change.Commit)
 						if err != nil {
@@ -142,4 +135,20 @@ func (p *Parser) Parse(content string) ([]ChangelogEntry, error) {
 	}
 
 	return p.entries, nil
+}
+
+func parseCommitHashFromLink(link string) string {
+	parts := strings.Split(link, "/")
+	possibleHash := parts[len(parts)-1]
+
+	// remove the closing parenthesis
+	if possibleHash[len(possibleHash)-1] == ')' {
+		possibleHash = possibleHash[:len(possibleHash)-1]
+	}
+
+	if git.IsValidSha(possibleHash) {
+		return possibleHash
+	}
+
+	return ""
 }
