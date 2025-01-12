@@ -111,7 +111,11 @@ func (p *Parser) Parse(content string) ([]ChangelogEntry, error) {
 					// extract the hash from the md link
 					parts := strings.Split(matches[4], "/")
 					change.Commit = parts[len(parts)-1]
-					change.Commit = change.Commit[:len(change.Commit)-1] // remove the closing parenthesis
+
+					// remove the closing parenthesis
+					if change.Commit[len(change.Commit)-1] == ')' {
+						change.Commit = change.Commit[:len(change.Commit)-1]
+					}
 
 					if p.IncludeBody {
 						var err error
