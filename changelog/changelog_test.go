@@ -128,6 +128,111 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestGetLatest(t *testing.T) {
+	input := `# Changelog
+
+## [v2.0.0](https://github.com/user/repo/compare/v1.0.0...v2.0.0) (2025-02-01)
+### Features
+* new feature
+
+## [v1.0.0](https://github.com/user/repo/compare/v0.1.0...v1.0.0) (2025-01-01)
+### Features
+* basic feature`
+
+	p := NewParser()
+	_, err := p.Parse(input)
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
+	}
+
+	latest, err := p.GetLatest()
+	if err != nil {
+		t.Fatalf("GetLatest failed: %v", err)
+	}
+
+	if latest.Version != "2.0.0" {
+		t.Errorf("Expected version 2.0.0, got %s", latest.Version)
+	}
+}
+
+func TestGetVersion(t *testing.T) {
+	input := `# Changelog
+
+## [v2.0.0](https://github.com/user/repo/compare/v1.0.0...v2.0.0) (2025-02-01)
+### Features
+* new feature
+
+## [v1.0.0](https://github.com/user/repo/compare/v0.1.0...v1.0.0) (2025-01-01)
+### Features
+* basic feature`
+
+	tests := []struct {
+		name    string
+		version string
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "existing version",
+			version: "1.0.0",
+			want:    "1.0.0",
+			wantErr: false,
+		},
+		{
+			name:    "non-existent version",
+			version: "3.0.0",
+			want:    "",
+			wantErr: true,
+		},
+	}
+
+	p := NewParser()
+	_, err := p.Parse(input)
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			entry, err := p.GetVersion(tt.version)
+			if tt.wantErr {
+				if err == nil {
+					t.Error("Expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+				return
+			}
+
+			if entry.Version != tt.want {
+				t.Errorf("Expected version %s, got %s", tt.want, entry.Version)
+			}
+		})
+	}
+}
+
+func TestEmptyChangelog(t *testing.T) {
+	input := "# Changelog\n"
+	p := NewParser()
+	_, err := p.Parse(input)
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
+	}
+
+	_, err = p.GetLatest()
+	if err == nil {
+		t.Error("Expected error for empty changelog but got none")
+	}
+
+	_, err = p.GetVersion("1.0.0")
+	if err == nil {
+		t.Error("Expected error for non-existent version but got none")
+	}
+}
+
 func mustParseTime(date string) time.Time {
 	t, err := time.Parse("2006-01-02", date)
 	if err != nil {

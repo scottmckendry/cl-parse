@@ -22,6 +22,8 @@ var cmd = &cobra.Command{
 		}
 
 		ver, _ := cmd.Flags().GetBool("version")
+		latest, _ := cmd.Flags().GetBool("latest")
+		release, _ := cmd.Flags().GetString("release")
 
 		if ver {
 			fmt.Printf("cl-parse v%s\n", VERSION)
@@ -41,12 +43,47 @@ var cmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		if latest {
+			if len(entries) == 0 {
+				fmt.Println("No changelog entries found")
+				os.Exit(1)
+			}
+			jsonData, err := json.MarshalIndent(entries[0], "", "  ")
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fmt.Println(string(jsonData))
+			return
+		}
+
+		if release != "" {
+			found := false
+			for _, entry := range entries {
+				if entry.Version == release {
+					jsonData, err := json.MarshalIndent(entry, "", "  ")
+					if err != nil {
+						fmt.Println(err)
+						os.Exit(1)
+					}
+					fmt.Println(string(jsonData))
+					found = true
+					break
+				}
+			}
+			if !found {
+				fmt.Printf("Version %s not found in changelog\n", release)
+				os.Exit(1)
+			}
+			return
+		}
+
+		// default to printing all entries
 		jsonData, err := json.MarshalIndent(entries, "", "  ")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-
 		fmt.Println(string(jsonData))
 	},
 }
@@ -60,4 +97,6 @@ func Execute() {
 
 func init() {
 	cmd.Flags().BoolP("version", "v", false, "display the current version of cl-parse")
+	cmd.Flags().BoolP("latest", "l", false, "display the most recent version from the changelog")
+	cmd.Flags().StringP("release", "r", "", "display the changelog entry for a specific release")
 }

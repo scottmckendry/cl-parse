@@ -2,6 +2,7 @@ package changelog
 
 import (
 	"bufio"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -30,6 +31,23 @@ func NewParser() *Parser {
 	return &Parser{
 		entries: make([]ChangelogEntry, 0),
 	}
+}
+
+func (p *Parser) GetLatest() (*ChangelogEntry, error) {
+	if len(p.entries) == 0 {
+		return nil, fmt.Errorf("no changelog entries found")
+	}
+	return &p.entries[0], nil
+}
+
+func (p *Parser) GetVersion(version string) (*ChangelogEntry, error) {
+	for _, entry := range p.entries {
+		if entry.Version == version {
+			return &entry, nil
+		}
+	}
+
+	return nil, fmt.Errorf("version %s not found", version)
 }
 
 // Parse the changelog content and return a slice of ChangelogEntry
