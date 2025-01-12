@@ -16,6 +16,14 @@ import (
 
 const VERSION = "0.3.0" // x-release-please-version
 
+type options struct {
+	version     bool
+	latest      bool
+	release     string
+	includeBody bool
+	format      string
+}
+
 var cmd = &cobra.Command{
 	Use:  "cl-parse [flags] [path]",
 	Args: cobra.MaximumNArgs(1),
@@ -25,13 +33,9 @@ var cmd = &cobra.Command{
 			changelogPath = args[0]
 		}
 
-		ver, _ := cmd.Flags().GetBool("version")
-		latest, _ := cmd.Flags().GetBool("latest")
-		release, _ := cmd.Flags().GetString("release")
-		includeBody, _ := cmd.Flags().GetBool("include-body")
-		format, _ := cmd.Flags().GetString("format")
+		opts := getOptions(cmd)
 
-		if ver {
+		if opts.version {
 			fmt.Printf("cl-parse v%s\n", VERSION)
 			os.Exit(0)
 		}
@@ -43,12 +47,10 @@ var cmd = &cobra.Command{
 		}
 
 		parser := changelog.NewParser()
-		parser.IncludeBody = includeBody
-		if parser.IncludeBody {
-			if !git.IsGitRepo(".") {
-				fmt.Println("Cannot fetch commits: Not a git repository")
-				os.Exit(1)
-			}
+		parser.IncludeBody = opts.includeBody
+		if parser.IncludeBody && !git.IsGitRepo(".") {
+			fmt.Println("Cannot fetch commits: Not a git repository")
+			os.Exit(1)
 		}
 
 		entries, err := parser.Parse(string(content))
@@ -57,54 +59,25 @@ var cmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if latest {
-			if len(entries) == 0 {
-				fmt.Println("No changelog entries found")
-				os.Exit(1)
-			}
-			outputData, err := marshalWithFormat(entries[0], format)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-			fmt.Println(string(outputData))
-			return
+		var outputErr error
+		switch {
+		case opts.latest:
+			outputErr = handleLatest(entries, opts.format)
+		case opts.release != "":
+			outputErr = handleRelease(entries, opts.release, opts.format)
+		default:
+			outputErr = outputFormatted(entries, opts.format)
 		}
 
-		if release != "" {
-			found := false
-			for _, entry := range entries {
-				if entry.Version == release {
-					outputData, err := marshalWithFormat(entry, format)
-					if err != nil {
-						fmt.Println(err)
-						os.Exit(1)
-					}
-					fmt.Println(string(outputData))
-					found = true
-					break
-				}
-			}
-			if !found {
-				fmt.Printf("Version %s not found in changelog\n", release)
-				os.Exit(1)
-			}
-			return
-		}
-
-		// default to printing all entries
-		outputData, err := marshalWithFormat(entries, format)
-		if err != nil {
-			fmt.Println(err)
+		if outputErr != nil {
+			fmt.Println(outputErr)
 			os.Exit(1)
 		}
-		fmt.Println(string(outputData))
 	},
 }
 
 func Execute() {
-	err := cmd.Execute()
-	if err != nil {
+	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
@@ -115,6 +88,22 @@ func init() {
 	cmd.Flags().StringP("release", "r", "", "display the changelog entry for a specific release")
 	cmd.Flags().Bool("include-body", false, "include the full commit body in changelog entry")
 	cmd.Flags().StringP("format", "f", "json", "output format (json, yaml, or toml)")
+}
+
+func getOptions(cmd *cobra.Command) options {
+	version, _ := cmd.Flags().GetBool("version")
+	latest, _ := cmd.Flags().GetBool("latest")
+	release, _ := cmd.Flags().GetString("release")
+	includeBody, _ := cmd.Flags().GetBool("include-body")
+	format, _ := cmd.Flags().GetString("format")
+
+	return options{
+		version:     version,
+		latest:      latest,
+		release:     release,
+		includeBody: includeBody,
+		format:      format,
+	}
 }
 
 func marshalWithFormat(v interface{}, format string) ([]byte, error) {
@@ -128,4 +117,29 @@ func marshalWithFormat(v interface{}, format string) ([]byte, error) {
 	default:
 		return nil, fmt.Errorf("unsupported format: %s", format)
 	}
+}
+
+func outputFormatted(data interface{}, format string) error {
+	output, err := marshalWithFormat(data, format)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+	return nil
+}
+
+func handleLatest(entries []changelog.ChangelogEntry, format string) error {
+	if len(entries) == 0 {
+		return fmt.Errorf("no changelog entries found")
+	}
+	return outputFormatted(entries[0], format)
+}
+
+func handleRelease(entries []changelog.ChangelogEntry, release, format string) error {
+	for _, entry := range entries {
+		if entry.Version == release {
+			return outputFormatted(entry, format)
+		}
+	}
+	return fmt.Errorf("version %s not found in changelog", release)
 }
