@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0](https://github.com/scottmckendry/cl-parse/compare/v0.2.0...v0.3.0) (2025-01-12)
+
+
+### Features
+
+* **parser:** add flags for latest and specific releases ([#6](https://github.com/scottmckendry/cl-parse/issues/6)) ([4124c24](https://github.com/scottmckendry/cl-parse/commit/4124c246e90080c836e14b9025a953d7131283c4)), closes [#3](https://github.com/scottmckendry/cl-parse/issues/3)
+* **parser:** optionally include commit body ([dc7c33e](https://github.com/scottmckendry/cl-parse/commit/dc7c33e03e0f46091016c0405bfc3ef8ac27d6ee)), closes [#1](https://github.com/scottmckendry/cl-parse/issues/1)
+
+
+### Bug Fixes
+
+* **cmd:** check if in git repo before trying to fetch commits ([8d2e7bc](https://github.com/scottmckendry/cl-parse/commit/8d2e7bc6e28fbd291c984c1414d7d58c71211469))
+* **parser:** more robust SHA detection ([ecceb64](https://github.com/scottmckendry/cl-parse/commit/ecceb64e8a0d0afb695d352293c3c4027ec3ed50))
+* **parser:** only remove closing paren if exists ([22822a9](https://github.com/scottmckendry/cl-parse/commit/22822a9f19442b51d952b550e73ad3c229583371))
+
 ## [0.2.0](https://github.com/scottmckendry/cl-parse/compare/v0.1.0...v0.2.0) (2025-01-12)
 
 
