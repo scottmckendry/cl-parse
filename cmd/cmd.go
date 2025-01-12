@@ -24,6 +24,7 @@ var cmd = &cobra.Command{
 		ver, _ := cmd.Flags().GetBool("version")
 		latest, _ := cmd.Flags().GetBool("latest")
 		release, _ := cmd.Flags().GetString("release")
+		includeBody, _ := cmd.Flags().GetBool("include-body")
 
 		if ver {
 			fmt.Printf("cl-parse v%s\n", VERSION)
@@ -37,6 +38,8 @@ var cmd = &cobra.Command{
 		}
 
 		parser := changelog.NewParser()
+		parser.IncludeBody = includeBody
+
 		entries, err := parser.Parse(string(content))
 		if err != nil {
 			fmt.Println(err)
@@ -99,4 +102,5 @@ func init() {
 	cmd.Flags().BoolP("version", "v", false, "display the current version of cl-parse")
 	cmd.Flags().BoolP("latest", "l", false, "display the most recent version from the changelog")
 	cmd.Flags().StringP("release", "r", "", "display the changelog entry for a specific release")
+	cmd.Flags().Bool("include-body", false, "include the full commit body in changelog entry")
 }

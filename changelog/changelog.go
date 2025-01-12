@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"cl-parse/git"
 )
 
 type ChangelogEntry struct {
@@ -20,10 +22,12 @@ type Change struct {
 	Description string `json:"description"`
 	PR          string `json:"pr,omitempty"`
 	Commit      string `json:"commit,omitempty"`
+	CommitBody  string `json:"commitBody,omitempty"`
 }
 
 type Parser struct {
-	entries []ChangelogEntry
+	entries     []ChangelogEntry
+	IncludeBody bool
 }
 
 // Create a new Parser
@@ -104,7 +108,18 @@ func (p *Parser) Parse(content string) ([]ChangelogEntry, error) {
 					change.PR = matches[3]
 				}
 				if matches[4] != "" {
-					change.Commit = matches[4]
+					// extract the hash from the md link
+					parts := strings.Split(matches[4], "/")
+					change.Commit = parts[len(parts)-1]
+					change.Commit = change.Commit[:len(change.Commit)-1] // remove the closing parenthesis
+
+					if p.IncludeBody {
+						var err error
+						change.CommitBody, err = git.GetCommmitBodyFromSha(".", change.Commit)
+						if err != nil {
+							return nil, fmt.Errorf("failed to get commit message: %w", err)
+						}
+					}
 				}
 
 				if currentSection != "" {
