@@ -6,6 +6,25 @@ import (
 	"time"
 )
 
+// Test helpers
+func createTestEntry(version, date string, compareURL string, changes map[string][]Change) ChangelogEntry {
+	return ChangelogEntry{
+		Version:    version,
+		Date:       mustParseTime(date),
+		CompareURL: compareURL,
+		Changes:    changes,
+	}
+}
+
+func createTestChange(description string, scope string, pr string, commit string) Change {
+	return Change{
+		Description: description,
+		Scope:       scope,
+		PR:          pr,
+		Commit:      commit,
+	}
+}
+
 func TestParse(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -29,30 +48,15 @@ func TestParse(t *testing.T) {
 * **ui**: fix button alignment
 `,
 			want: []ChangelogEntry{
-				{
-					Version:    "1.0.0",
-					Date:       mustParseTime("2025-01-01"),
-					CompareURL: "https://github.com/user/repo/compare/v0.1.0...v1.0.0",
-					Changes: map[string][]Change{
-						"Features": {
-							{
-								Scope:       "api",
-								Description: "add new endpoint",
-								PR:          "123",
-							},
-							{
-								Description: "basic feature",
-								Commit:      "1a196c09283903991da080552e3aa980ac64fec9",
-							},
-						},
-						"Bug Fixes": {
-							{
-								Scope:       "ui",
-								Description: "fix button alignment",
-							},
-						},
+				createTestEntry("1.0.0", "2025-01-01", "https://github.com/user/repo/compare/v0.1.0...v1.0.0", map[string][]Change{
+					"Features": {
+						createTestChange("add new endpoint", "api", "123", ""),
+						createTestChange("basic feature", "", "", "1a196c09283903991da080552e3aa980ac64fec9"),
 					},
-				},
+					"Bug Fixes": {
+						createTestChange("fix button alignment", "ui", "", ""),
+					},
+				}),
 			},
 		},
 		{
@@ -65,18 +69,11 @@ func TestParse(t *testing.T) {
 * basic feature
 `,
 			want: []ChangelogEntry{
-				{
-					Version:    "1.0.0-alpha.1",
-					Date:       mustParseTime("2025-01-01"),
-					CompareURL: "https://github.com/user/repo/compare/v0.1.0...v1.0.0-alpha.1",
-					Changes: map[string][]Change{
-						"Features": {
-							{
-								Description: "basic feature",
-							},
-						},
+				createTestEntry("1.0.0-alpha.1", "2025-01-01", "https://github.com/user/repo/compare/v0.1.0...v1.0.0-alpha.1", map[string][]Change{
+					"Features": {
+						createTestChange("basic feature", "", "", ""),
 					},
-				},
+				}),
 			},
 		},
 		{
@@ -89,18 +86,11 @@ func TestParse(t *testing.T) {
 * basic feature
 `,
 			want: []ChangelogEntry{
-				{
-					Version:    "1.0.0",
-					Date:       mustParseTime("2025-01-01"),
-					CompareURL: "",
-					Changes: map[string][]Change{
-						"Features": {
-							{
-								Description: "basic feature",
-							},
-						},
+				createTestEntry("1.0.0", "2025-01-01", "", map[string][]Change{
+					"Features": {
+						createTestChange("basic feature", "", "", ""),
 					},
-				},
+				}),
 			},
 		},
 		{
@@ -115,29 +105,17 @@ func TestParse(t *testing.T) {
 * some docs ([docs link text](https://example.com/docs))
 `,
 			want: []ChangelogEntry{
-				{
-					Version:    "1.0.0",
-					Date:       mustParseTime("2025-01-01"),
-					CompareURL: "https://github.com/user/repo/compare/v0.1.0...v1.0.0",
-					Changes: map[string][]Change{
-						"Features": {
-							{
-								Description: "basic feature",
-								Commit:      "8f5b75c6ba6c525e29463e2a96fec119e426e283",
-							},
-							{
-								Description: "another feature",
-								Commit:      "22822a9f19442b51d952b550e73ad3c229583371",
-							},
-							{
-								Description: "some docs",
-							},
-						},
+				createTestEntry("1.0.0", "2025-01-01", "https://github.com/user/repo/compare/v0.1.0...v1.0.0", map[string][]Change{
+					"Features": {
+						createTestChange("basic feature", "", "", "8f5b75c6ba6c525e29463e2a96fec119e426e283"),
+						createTestChange("another feature", "", "", "22822a9f19442b51d952b550e73ad3c229583371"),
+						createTestChange("some docs", "", "", ""),
 					},
-				},
+				}),
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := NewParser()
@@ -163,7 +141,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestGetLatest(t *testing.T) {
-	input := `# Changelog
+	const testChangelog = `# Changelog
 
 ## [v2.0.0](https://github.com/user/repo/compare/v1.0.0...v2.0.0) (2025-02-01)
 ### Features
@@ -173,24 +151,26 @@ func TestGetLatest(t *testing.T) {
 ### Features
 * basic feature`
 
-	p := NewParser()
-	_, err := p.Parse(input)
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	t.Run("returns latest version", func(t *testing.T) {
+		p := NewParser()
+		_, err := p.Parse(testChangelog)
+		if err != nil {
+			t.Fatalf("Parse failed: %v", err)
+		}
 
-	latest, err := p.GetLatest()
-	if err != nil {
-		t.Fatalf("GetLatest failed: %v", err)
-	}
+		latest, err := p.GetLatest()
+		if err != nil {
+			t.Fatalf("GetLatest failed: %v", err)
+		}
 
-	if latest.Version != "2.0.0" {
-		t.Errorf("Expected version 2.0.0, got %s", latest.Version)
-	}
+		if latest.Version != "2.0.0" {
+			t.Errorf("Expected version 2.0.0, got %s", latest.Version)
+		}
+	})
 }
 
 func TestGetVersion(t *testing.T) {
-	input := `# Changelog
+	const testChangelog = `# Changelog
 
 ## [v2.0.0](https://github.com/user/repo/compare/v1.0.0...v2.0.0) (2025-02-01)
 ### Features
@@ -221,8 +201,7 @@ func TestGetVersion(t *testing.T) {
 	}
 
 	p := NewParser()
-	_, err := p.Parse(input)
-	if err != nil {
+	if _, err := p.Parse(testChangelog); err != nil {
 		t.Fatalf("Parse failed: %v", err)
 	}
 
@@ -249,22 +228,21 @@ func TestGetVersion(t *testing.T) {
 }
 
 func TestEmptyChangelog(t *testing.T) {
-	input := "# Changelog\n"
-	p := NewParser()
-	_, err := p.Parse(input)
-	if err != nil {
-		t.Fatalf("Parse failed: %v", err)
-	}
+	t.Run("handles empty changelog", func(t *testing.T) {
+		p := NewParser()
+		_, err := p.Parse("# Changelog\n")
+		if err != nil {
+			t.Fatalf("Parse failed: %v", err)
+		}
 
-	_, err = p.GetLatest()
-	if err == nil {
-		t.Error("Expected error for empty changelog but got none")
-	}
+		if _, err := p.GetLatest(); err == nil {
+			t.Error("Expected error for empty changelog but got none")
+		}
 
-	_, err = p.GetVersion("1.0.0")
-	if err == nil {
-		t.Error("Expected error for non-existent version but got none")
-	}
+		if _, err := p.GetVersion("1.0.0"); err == nil {
+			t.Error("Expected error for non-existent version but got none")
+		}
+	})
 }
 
 func mustParseTime(date string) time.Time {
