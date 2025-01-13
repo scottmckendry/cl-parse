@@ -17,11 +17,12 @@ import (
 const VERSION = "0.3.0" // x-release-please-version
 
 type options struct {
-	version     bool
-	latest      bool
-	release     string
-	includeBody bool
-	format      string
+	version          bool
+	latest           bool
+	release          string
+	includeBody      bool
+	fetchItemDetails bool
+	format           string
 }
 
 var cmd = &cobra.Command{
@@ -48,7 +49,8 @@ var cmd = &cobra.Command{
 
 		parser := changelog.NewParser()
 		parser.IncludeBody = opts.includeBody
-		if parser.IncludeBody && !git.IsGitRepo(".") {
+		parser.FetchItemDetails = opts.fetchItemDetails
+		if (parser.IncludeBody || parser.FetchItemDetails) && !git.IsGitRepo(".") {
 			fmt.Println("Cannot fetch commits: Not a git repository")
 			os.Exit(1)
 		}
@@ -87,6 +89,8 @@ func init() {
 	cmd.Flags().BoolP("latest", "l", false, "display the most recent version from the changelog")
 	cmd.Flags().StringP("release", "r", "", "display the changelog entry for a specific release")
 	cmd.Flags().Bool("include-body", false, "include the full commit body in changelog entry")
+	cmd.Flags().
+		Bool("fetch-item-details", false, "fetch details for related items (e.g. GitHub issues & PRs)")
 	cmd.Flags().StringP("format", "f", "json", "output format (json, yaml, or toml)")
 }
 
@@ -95,14 +99,16 @@ func getOptions(cmd *cobra.Command) options {
 	latest, _ := cmd.Flags().GetBool("latest")
 	release, _ := cmd.Flags().GetString("release")
 	includeBody, _ := cmd.Flags().GetBool("include-body")
+	fetchItemDetails, _ := cmd.Flags().GetBool("fetch-item-details")
 	format, _ := cmd.Flags().GetString("format")
 
 	return options{
-		version:     version,
-		latest:      latest,
-		release:     release,
-		includeBody: includeBody,
-		format:      format,
+		version:          version,
+		latest:           latest,
+		release:          release,
+		includeBody:      includeBody,
+		fetchItemDetails: fetchItemDetails,
+		format:           format,
 	}
 }
 

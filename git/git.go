@@ -54,3 +54,18 @@ func IsValidSha(sha string) bool {
 
 	return true
 }
+
+// GetOriginURL retrieves the origin URL for a git repository
+func GetOriginURL(path string) (string, error) {
+	repo, err := git.PlainOpen(path)
+	if err != nil {
+		return "", fmt.Errorf("failed to open repository: %w", err)
+	}
+
+	remote, err := repo.Remote("origin")
+	if err != nil {
+		return "", fmt.Errorf("failed to get remote: %w", err)
+	}
+
+	return remote.Config().URLs[0], nil
+}

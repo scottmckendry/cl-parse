@@ -4,10 +4,16 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"cl-parse/origin"
 )
 
 // Test helpers
-func createTestEntry(version, date string, compareURL string, changes map[string][]Change) ChangelogEntry {
+func createTestEntry(
+	version, date string,
+	compareURL string,
+	changes map[string][]Change,
+) ChangelogEntry {
 	return ChangelogEntry{
 		Version:    version,
 		Date:       mustParseTime(date),
@@ -16,7 +22,12 @@ func createTestEntry(version, date string, compareURL string, changes map[string
 	}
 }
 
-func createTestChange(description string, scope string, commit string, relatedItems []string) Change {
+func createTestChange(
+	description string,
+	scope string,
+	commit string,
+	relatedItems []*origin.Issue,
+) Change {
 	return Change{
 		Description:  description,
 		Scope:        scope,
@@ -48,15 +59,25 @@ func TestParse(t *testing.T) {
 * **ui**: fix button alignment
 `,
 			want: []ChangelogEntry{
-				createTestEntry("1.0.0", "2025-01-01", "https://github.com/user/repo/compare/v0.1.0...v1.0.0", map[string][]Change{
-					"Features": {
-						createTestChange("add new endpoint", "api", "", nil),
-						createTestChange("basic feature", "", "1a196c09283903991da080552e3aa980ac64fec9", nil),
+				createTestEntry(
+					"1.0.0",
+					"2025-01-01",
+					"https://github.com/user/repo/compare/v0.1.0...v1.0.0",
+					map[string][]Change{
+						"Features": {
+							createTestChange("add new endpoint", "api", "", nil),
+							createTestChange(
+								"basic feature",
+								"",
+								"1a196c09283903991da080552e3aa980ac64fec9",
+								nil,
+							),
+						},
+						"Bug Fixes": {
+							createTestChange("fix button alignment", "ui", "", nil),
+						},
 					},
-					"Bug Fixes": {
-						createTestChange("fix button alignment", "ui", "", nil),
-					},
-				}),
+				),
 			},
 		},
 		{
@@ -69,11 +90,16 @@ func TestParse(t *testing.T) {
 * basic feature
 `,
 			want: []ChangelogEntry{
-				createTestEntry("1.0.0-alpha.1", "2025-01-01", "https://github.com/user/repo/compare/v0.1.0...v1.0.0-alpha.1", map[string][]Change{
-					"Features": {
-						createTestChange("basic feature", "", "", nil),
+				createTestEntry(
+					"1.0.0-alpha.1",
+					"2025-01-01",
+					"https://github.com/user/repo/compare/v0.1.0...v1.0.0-alpha.1",
+					map[string][]Change{
+						"Features": {
+							createTestChange("basic feature", "", "", nil),
+						},
 					},
-				}),
+				),
 			},
 		},
 		{
@@ -88,7 +114,12 @@ func TestParse(t *testing.T) {
 			want: []ChangelogEntry{
 				createTestEntry("1.0.0", "2025-01-01", "", map[string][]Change{
 					"Features": {
-						createTestChange("basic feature #456", "", "", []string{"456"}),
+						createTestChange(
+							"basic feature #456",
+							"",
+							"",
+							[]*origin.Issue{{Number: 456}},
+						),
 					},
 				}),
 			},
@@ -105,13 +136,28 @@ func TestParse(t *testing.T) {
 * some docs ([docs link text](https://example.com/docs))
 `,
 			want: []ChangelogEntry{
-				createTestEntry("1.0.0", "2025-01-01", "https://github.com/user/repo/compare/v0.1.0...v1.0.0", map[string][]Change{
-					"Features": {
-						createTestChange("basic feature", "", "8f5b75c6ba6c525e29463e2a96fec119e426e283", nil),
-						createTestChange("another feature", "", "22822a9f19442b51d952b550e73ad3c229583371", nil),
-						createTestChange("some docs", "", "", nil),
+				createTestEntry(
+					"1.0.0",
+					"2025-01-01",
+					"https://github.com/user/repo/compare/v0.1.0...v1.0.0",
+					map[string][]Change{
+						"Features": {
+							createTestChange(
+								"basic feature",
+								"",
+								"8f5b75c6ba6c525e29463e2a96fec119e426e283",
+								nil,
+							),
+							createTestChange(
+								"another feature",
+								"",
+								"22822a9f19442b51d952b550e73ad3c229583371",
+								nil,
+							),
+							createTestChange("some docs", "", "", nil),
+						},
 					},
-				}),
+				),
 			},
 		},
 	}

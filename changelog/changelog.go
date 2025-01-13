@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"regexp"
-	"slices"
+	"strconv"
 	"strings"
 	"time"
 
 	"cl-parse/git"
+	"cl-parse/origin"
 )
 
 const (
@@ -18,23 +19,25 @@ const (
 )
 
 type ChangelogEntry struct {
-	Version    string              `json:"version" yaml:"version" toml:"version"`
-	Date       time.Time           `json:"date" yaml:"date" toml:"date"`
+	Version    string              `json:"version"    yaml:"version"    toml:"version"`
+	Date       time.Time           `json:"date"       yaml:"date"       toml:"date"`
 	CompareURL string              `json:"compareUrl" yaml:"compareUrl" toml:"compareUrl"`
-	Changes    map[string][]Change `json:"changes" yaml:"changes" toml:"changes"`
+	Changes    map[string][]Change `json:"changes"    yaml:"changes"    toml:"changes"`
 }
 
 type Change struct {
-	Scope        string   `json:"scope,omitempty" yaml:"scope,omitempty" toml:"scope,omitempty"`
-	Description  string   `json:"description" yaml:"description" toml:"description"`
-	Commit       string   `json:"commit,omitempty" yaml:"commit,omitempty" toml:"commit,omitempty"`
-	CommitBody   string   `json:"commitBody,omitempty" yaml:"commitBody,omitempty" toml:"commitBody,omitempty"`
-	RelatedItems []string `json:"relatedItems,omitempty" yaml:"relatedItems,omitempty" toml:"relatedItems,omitempty"`
+	Scope        string          `json:"scope,omitempty"        yaml:"scope,omitempty"        toml:"scope,omitempty"`
+	Description  string          `json:"description"            yaml:"description"            toml:"description"`
+	Commit       string          `json:"commit,omitempty"       yaml:"commit,omitempty"       toml:"commit,omitempty"`
+	CommitBody   string          `json:"commitBody,omitempty"   yaml:"commitBody,omitempty"   toml:"commitBody,omitempty"`
+	RelatedItems []*origin.Issue `json:"relatedItems,omitempty" yaml:"relatedItems,omitempty" toml:"relatedItems,omitempty"`
 }
 
 type Parser struct {
-	entries     []ChangelogEntry
-	IncludeBody bool
+	entries          []ChangelogEntry
+	originUrl        string
+	IncludeBody      bool
+	FetchItemDetails bool
 }
 
 func NewParser() *Parser {
@@ -63,9 +66,17 @@ func (p *Parser) Parse(content string) ([]ChangelogEntry, error) {
 	scanner := bufio.NewScanner(strings.NewReader(content))
 	var currentEntry *ChangelogEntry
 	var currentSection string
+	var err error
 
 	versionRegex := regexp.MustCompile(versionPattern)
 	changeRegex := regexp.MustCompile(changePattern)
+
+	if p.FetchItemDetails {
+		p.originUrl, err = git.GetOriginURL(".")
+		if err != nil {
+			return nil, fmt.Errorf("failed to get origin URL: %w", err)
+		}
+	}
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -79,7 +90,6 @@ func (p *Parser) Parse(content string) ([]ChangelogEntry, error) {
 				p.entries = append(p.entries, *currentEntry)
 			}
 
-			var err error
 			currentEntry, err = p.createNewEntry(matches)
 			if err != nil {
 				return nil, err
@@ -120,16 +130,26 @@ func (p *Parser) createNewEntry(matches []string) (*ChangelogEntry, error) {
 	}, nil
 }
 
-func (p *Parser) parseChange(line string, changeRegex *regexp.Regexp, currentSection string, currentEntry *ChangelogEntry) error {
+func (p *Parser) parseChange(
+	line string,
+	changeRegex *regexp.Regexp,
+	currentSection string,
+	currentEntry *ChangelogEntry,
+) error {
 	matches := changeRegex.FindStringSubmatch(line)
 	if matches == nil {
 		return nil
 	}
 
+	relatedItems, err := extractRelatedItems(matches[2], p.originUrl)
+	if err != nil {
+		return err
+	}
+
 	change := Change{
 		Scope:        matches[1],
 		Description:  matches[2],
-		RelatedItems: extractRelatedItems(matches[2]), // Extract from description
+		RelatedItems: relatedItems,
 	}
 
 	if matches[3] != "" {
@@ -137,11 +157,13 @@ func (p *Parser) parseChange(line string, changeRegex *regexp.Regexp, currentSec
 		if err := p.addCommitBody(&change); err != nil {
 			return err
 		}
-		// Extract related items from commit body if available
 		if change.CommitBody != "" {
-			bodyItems := extractRelatedItems(change.CommitBody)
+			bodyItems, err := extractRelatedItems(change.CommitBody, p.originUrl)
+			if err != nil {
+				return err
+			}
 			for _, item := range bodyItems {
-				if !slices.Contains(change.RelatedItems, item) {
+				if !containsIssue(change.RelatedItems, item) {
 					change.RelatedItems = append(change.RelatedItems, item)
 				}
 			}
@@ -185,19 +207,37 @@ func parseCommitHashFromLink(link string) string {
 	return ""
 }
 
-func extractRelatedItems(text string) []string {
+func extractRelatedItems(text string, repoUrl string) ([]*origin.Issue, error) {
 	regex := regexp.MustCompile(`#(\d+)`)
 	matches := regex.FindAllStringSubmatch(text, -1)
 
 	seen := make(map[string]bool)
-	var items []string
+	var items []*origin.Issue
 
 	for _, match := range matches {
 		if !seen[match[1]] {
-			items = append(items, match[1])
+			number, _ := strconv.Atoi(match[1])
+			issue := &origin.Issue{
+				Number: number,
+			}
+			if repoUrl != "" {
+				if err := origin.GetIssueDetails(issue, repoUrl, match[1]); err != nil {
+					return nil, fmt.Errorf("failed to get issue details for #%s: %w", match[1], err)
+				}
+			}
+			items = append(items, issue)
 			seen[match[1]] = true
 		}
 	}
 
-	return items
+	return items, nil
+}
+
+func containsIssue(items []*origin.Issue, item *origin.Issue) bool {
+	for _, existing := range items {
+		if existing.Number == item.Number {
+			return true
+		}
+	}
+	return false
 }
