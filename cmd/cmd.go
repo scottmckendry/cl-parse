@@ -22,6 +22,7 @@ type options struct {
 	release          string
 	includeBody      bool
 	fetchItemDetails bool
+	token            string
 	format           string
 }
 
@@ -91,6 +92,7 @@ func init() {
 	cmd.Flags().Bool("include-body", false, "include the full commit body in changelog entry")
 	cmd.Flags().
 		Bool("fetch-item-details", false, "fetch details for related items (e.g. GitHub issues & PRs)")
+	cmd.Flags().String("token", "", "token for fetching related items")
 	cmd.Flags().StringP("format", "f", "json", "output format (json, yaml, or toml)")
 }
 
@@ -100,6 +102,7 @@ func getOptions(cmd *cobra.Command) options {
 	release, _ := cmd.Flags().GetString("release")
 	includeBody, _ := cmd.Flags().GetBool("include-body")
 	fetchItemDetails, _ := cmd.Flags().GetBool("fetch-item-details")
+	token, _ := cmd.Flags().GetString("token")
 	format, _ := cmd.Flags().GetString("format")
 
 	return options{
@@ -108,6 +111,7 @@ func getOptions(cmd *cobra.Command) options {
 		release:          release,
 		includeBody:      includeBody,
 		fetchItemDetails: fetchItemDetails,
+		token:            token,
 		format:           format,
 	}
 }

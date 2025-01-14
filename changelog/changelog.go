@@ -36,6 +36,7 @@ type Change struct {
 type Parser struct {
 	entries          []ChangelogEntry
 	originUrl        string
+	orignToken       string
 	IncludeBody      bool
 	FetchItemDetails bool
 }
@@ -141,7 +142,7 @@ func (p *Parser) parseChange(
 		return nil
 	}
 
-	relatedItems, err := extractRelatedItems(matches[2], p.originUrl)
+	relatedItems, err := extractRelatedItems(matches[2], p.originUrl, p.orignToken)
 	if err != nil {
 		return err
 	}
@@ -158,7 +159,7 @@ func (p *Parser) parseChange(
 			return err
 		}
 		if change.CommitBody != "" {
-			bodyItems, err := extractRelatedItems(change.CommitBody, p.originUrl)
+			bodyItems, err := extractRelatedItems(change.CommitBody, p.originUrl, p.orignToken)
 			if err != nil {
 				return err
 			}
@@ -207,26 +208,37 @@ func parseCommitHashFromLink(link string) string {
 	return ""
 }
 
-func extractRelatedItems(text string, repoUrl string) ([]*origin.Issue, error) {
+func extractRelatedItems(text string, repoUrl string, token string) ([]*origin.Issue, error) {
 	regex := regexp.MustCompile(`#(\d+)`)
 	matches := regex.FindAllStringSubmatch(text, -1)
 
 	seen := make(map[string]bool)
 	var items []*origin.Issue
 
-	for _, match := range matches {
-		if !seen[match[1]] {
-			number, _ := strconv.Atoi(match[1])
-			issue := &origin.Issue{
-				Number: number,
-			}
-			if repoUrl != "" {
-				if err := origin.GetIssueDetails(issue, repoUrl, match[1]); err != nil {
+	if repoUrl != "" {
+		provider, err := origin.NewIssueProvider(origin.Config{URL: repoUrl, Token: token})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create issue provider: %w", err)
+		}
+
+		for _, match := range matches {
+			if !seen[match[1]] {
+				issue, err := provider.GetIssue(match[1])
+				if err != nil {
 					return nil, fmt.Errorf("failed to get issue details for #%s: %w", match[1], err)
 				}
+				items = append(items, issue)
+				seen[match[1]] = true
 			}
-			items = append(items, issue)
-			seen[match[1]] = true
+		}
+	} else {
+		// When repoUrl is empty, just create basic Issue objects with numbers
+		for _, match := range matches {
+			num, _ := strconv.Atoi(match[1])
+			if !seen[match[1]] {
+				items = append(items, &origin.Issue{Number: num})
+				seen[match[1]] = true
+			}
 		}
 	}
 
