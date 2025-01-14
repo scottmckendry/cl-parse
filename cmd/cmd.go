@@ -51,6 +51,8 @@ var cmd = &cobra.Command{
 		parser := changelog.NewParser()
 		parser.IncludeBody = opts.includeBody
 		parser.FetchItemDetails = opts.fetchItemDetails
+		parser.OriginToken = opts.token
+
 		if (parser.IncludeBody || parser.FetchItemDetails) && !git.IsGitRepo(".") {
 			fmt.Println("Cannot fetch commits: Not a git repository")
 			os.Exit(1)

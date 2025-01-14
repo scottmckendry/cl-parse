@@ -36,7 +36,7 @@ type Change struct {
 type Parser struct {
 	entries          []ChangelogEntry
 	originUrl        string
-	orignToken       string
+	OriginToken      string
 	IncludeBody      bool
 	FetchItemDetails bool
 }
@@ -142,7 +142,7 @@ func (p *Parser) parseChange(
 		return nil
 	}
 
-	relatedItems, err := extractRelatedItems(matches[2], p.originUrl, p.orignToken)
+	relatedItems, err := extractRelatedItems(matches[2], p.originUrl, p.OriginToken)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (p *Parser) parseChange(
 			return err
 		}
 		if change.CommitBody != "" {
-			bodyItems, err := extractRelatedItems(change.CommitBody, p.originUrl, p.orignToken)
+			bodyItems, err := extractRelatedItems(change.CommitBody, p.originUrl, p.OriginToken)
 			if err != nil {
 				return err
 			}
