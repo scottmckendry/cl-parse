@@ -2,7 +2,6 @@ package origin
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -24,8 +23,13 @@ func TestNewIssueProvider(t *testing.T) {
 			want: "*origin.AzureDevOpsProvider",
 		},
 		{
+			name: "gitlab provider",
+			url:  "https://gitlab.com/owner/repo",
+			want: "*origin.GitLabProvider",
+		},
+		{
 			name:    "unsupported provider",
-			url:     "https://gitlab.com/owner/repo",
+			url:     "https://bitbucket.org/owner/repo",
 			wantErr: true,
 		},
 	}
@@ -79,21 +83,71 @@ func TestParseGitHubURL(t *testing.T) {
 }
 
 func TestGitHubProvider_GetIssue(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/repos/owner/repo/issues/1" {
-			t.Errorf("Expected path /repos/owner/repo/issues/1, got %s", r.URL.Path)
-		}
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"number": 1, "title": "Test Issue", "body": "Test Body"}`))
-	}))
-	defer server.Close()
-
 	provider := &GitHubProvider{
 		BaseProvider: BaseProvider{
-			client: server.Client(),
+			client: &http.Client{},
 		},
 		owner: "scottmckendry",
 		repo:  "cl-parse",
+	}
+
+	issue, err := provider.GetIssue("9")
+	if err != nil {
+		t.Fatalf("GetIssue() error = %v", err)
+	}
+
+	if issue.Number != 9 || issue.Title != "Test Issue" || issue.Body != "Test Body" {
+		t.Errorf(
+			"GetIssue() = %+v, want {Number: 9, Title: 'Test Issue', Body: 'Test Body'}",
+			issue,
+		)
+	}
+}
+
+func TestParseGitLabURL(t *testing.T) {
+	tests := []struct {
+		name        string
+		url         string
+		wantProject string
+	}{
+		{
+			name:        "simple project path",
+			url:         "https://gitlab.com/owner/repo",
+			wantProject: "owner/repo",
+		},
+		{
+			name:        "nested group project path",
+			url:         "https://gitlab.com/group/subgroup/repo",
+			wantProject: "group/subgroup/repo",
+		},
+		{
+			name:        "with .git suffix",
+			url:         "https://gitlab.com/owner/repo.git",
+			wantProject: "owner/repo",
+		},
+		{
+			name:        "with trailing slash",
+			url:         "https://gitlab.com/owner/repo/",
+			wantProject: "owner/repo",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseGitLabURL(tt.url)
+			if got != tt.wantProject {
+				t.Errorf("parseGitLabURL() = %v, want %v", got, tt.wantProject)
+			}
+		})
+	}
+}
+
+func TestGitLabProvider_GetIssue(t *testing.T) {
+	provider := &GitLabProvider{
+		BaseProvider: BaseProvider{
+			client: &http.Client{},
+		},
+		project: "scottmckendry/test",
 	}
 
 	issue, err := provider.GetIssue("1")
@@ -106,5 +160,38 @@ func TestGitHubProvider_GetIssue(t *testing.T) {
 			"GetIssue() = %+v, want {Number: 1, Title: 'Test Issue', Body: 'Test Body'}",
 			issue,
 		)
+	}
+}
+
+func TestParseAzureDevOpsOrganization(t *testing.T) {
+	tests := []struct {
+		name    string
+		url     string
+		wantOrg string
+	}{
+		{
+			name:    "simple project path",
+			url:     "https://dev.azure.com/org/project/repo",
+			wantOrg: "org",
+		},
+		{
+			name:    "nested project path",
+			url:     "https://dev.azure.com/org/group/project/repo",
+			wantOrg: "org",
+		},
+		{
+			name:    "with trailing slash",
+			url:     "https://dev.azure.com/org/project/repo/",
+			wantOrg: "org",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseAzureDevOpsURL(tt.url)
+			if got != tt.wantOrg {
+				t.Errorf("parseAzureDevOpsOrganization() = %v, want %v", got, tt.wantOrg)
+			}
+		})
 	}
 }
