@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0](https://github.com/scottmckendry/cl-parse/compare/v0.3.0...v0.4.0) (2025-01-14)
+
+
+### Features
+
+* **cmd:** `format` option with new YAML & TOML outputs ([7ffb283](https://github.com/scottmckendry/cl-parse/commit/7ffb28361ceb950ebdb5483cfdc9f800181f214f))
+* **origin:** add gitlab support ([282dc8a](https://github.com/scottmckendry/cl-parse/commit/282dc8a4e502a2901f2597baf65fd88a4b5147a7))
+* **origin:** add support for Azure DevOps workitems ([e297c7a](https://github.com/scottmckendry/cl-parse/commit/e297c7a5f1bba68e0f0a489870c7e5410abaa7c4)), closes [#2](https://github.com/scottmckendry/cl-parse/issues/2)
+* **origin:** add support for github issue lookup ([539c4cd](https://github.com/scottmckendry/cl-parse/commit/539c4cdf5fabcdef93dbf3eca6200b09f6c68683)), closes [#2](https://github.com/scottmckendry/cl-parse/issues/2)
+* **parser:** add RelatedItems property ([fed2a7b](https://github.com/scottmckendry/cl-parse/commit/fed2a7b4d0824ac6d04f96cda2f37f2cd80e9d31))
+
+
+### Bug Fixes
+
+* **parser:** handle "closes #X" strings ([e44ef80](https://github.com/scottmckendry/cl-parse/commit/e44ef80328f7284436ab7f81562df7aa9e11d6af))
+
 ## [0.3.0](https://github.com/scottmckendry/cl-parse/compare/v0.2.0...v0.3.0) (2025-01-12)
 
 
