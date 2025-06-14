@@ -85,6 +85,14 @@ func (a *AzureDevOpsProvider) GetIssue(issueNumber string) (*Issue, error) {
 // parseAzureDevOpsURL extracts organization name from an Azure DevOps URL.
 func parseAzureDevOpsURL(url string) (org string) {
 	url = strings.TrimSuffix(strings.TrimSuffix(url, "/"), ".git")
+
+	if strings.HasPrefix(url, "git@ssh.dev.azure.com:") {
+		parts := strings.Split(strings.TrimPrefix(url, "git@ssh.dev.azure.com:v3/"), "/")
+		if len(parts) > 0 {
+			return parts[0]
+		}
+	}
+
 	parts := strings.Split(url, "/")
 	for i, part := range parts {
 		if part == "dev.azure.com" && i+1 < len(parts) {

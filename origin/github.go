@@ -71,6 +71,15 @@ func (g *GitHubProvider) GetIssue(issueNumber string) (*Issue, error) {
 // parseGitHubURL extracts owner and repository name from a GitHub URL.
 func parseGitHubURL(url string) (owner, repo string) {
 	url = strings.TrimSuffix(strings.TrimSuffix(url, "/"), ".git")
+
+	if strings.HasPrefix(url, "git@github.com:") {
+		parts := strings.Split(strings.TrimPrefix(url, "git@github.com:"), "/")
+		if len(parts) >= 2 {
+			return parts[0], parts[1]
+		}
+		return "", ""
+	}
+
 	parts := strings.Split(url, "/")
 	for i, part := range parts {
 		if part == "github.com" && i+2 < len(parts) {

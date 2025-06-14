@@ -67,6 +67,16 @@ func TestParseGitHubURL(t *testing.T) {
 			wantOwner: "owner",
 			wantRepo:  "repo",
 		},
+		{
+			url:       "git@github.com:owner/repo.git",
+			wantOwner: "owner",
+			wantRepo:  "repo",
+		},
+		{
+			url:       "git@github.com:owner/repo",
+			wantOwner: "owner",
+			wantRepo:  "repo",
+		},
 	}
 
 	for _, tt := range tests {
@@ -130,6 +140,21 @@ func TestParseGitLabURL(t *testing.T) {
 			url:         "https://gitlab.com/owner/repo/",
 			wantProject: "owner/repo",
 		},
+		{
+			name:        "ssh url format",
+			url:         "git@gitlab.com:owner/repo.git",
+			wantProject: "owner/repo",
+		},
+		{
+			name:        "ssh url with nested groups",
+			url:         "git@gitlab.com:group/subgroup/repo.git",
+			wantProject: "group/subgroup/repo",
+		},
+		{
+			name:        "ssh url without .git suffix",
+			url:         "git@gitlab.com:owner/repo",
+			wantProject: "owner/repo",
+		},
 	}
 
 	for _, tt := range tests {
@@ -183,6 +208,21 @@ func TestParseAzureDevOpsOrganization(t *testing.T) {
 			name:    "with trailing slash",
 			url:     "https://dev.azure.com/org/project/repo/",
 			wantOrg: "org",
+		},
+		{
+			name:    "ssh url format",
+			url:     "git@ssh.dev.azure.com:v3/contoso/project/repo",
+			wantOrg: "contoso",
+		},
+		{
+			name:    "ssh url with trailing slash",
+			url:     "git@ssh.dev.azure.com:v3/microsoft/project/repo/",
+			wantOrg: "microsoft",
+		},
+		{
+			name:    "ssh url with .git suffix",
+			url:     "git@ssh.dev.azure.com:v3/google/project/repo.git",
+			wantOrg: "google",
 		},
 	}
 

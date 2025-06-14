@@ -76,6 +76,15 @@ func (g *GitLabProvider) GetIssue(issueNumber string) (*Issue, error) {
 // parseGitLabURL extracts project path from a GitLab URL
 func parseGitLabURL(url string) string {
 	url = strings.TrimSuffix(strings.TrimSuffix(url, "/"), ".git")
+
+	if strings.HasPrefix(url, "git@gitlab.com:") {
+		parts := strings.SplitN(url, ":", 2)
+		if len(parts) == 2 {
+			return strings.TrimSuffix(parts[1], ".git")
+		}
+		return ""
+	}
+
 	parts := strings.Split(url, "/")
 	for i, part := range parts {
 		if part == "gitlab.com" && i+1 < len(parts) {
