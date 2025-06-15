@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/go-git/go-git/v5 v5.13.1
-	github.com/pelletier/go-toml/v2 v2.2.3
+	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/spf13/cobra v1.8.1
 	gopkg.in/yaml.v3 v3.0.1
 )
