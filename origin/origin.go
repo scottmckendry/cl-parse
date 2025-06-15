@@ -15,7 +15,7 @@ type Issue struct {
 
 // IssueProvider defines the interface for fetching issue details from Git providers.
 type IssueProvider interface {
-	GetIssue(issueNumber string) (*Issue, error)
+	GetIssue(issueNumber string, isPullRequest bool) (*Issue, error)
 }
 
 // Config contains the configuration needed to connect to a Git provider.

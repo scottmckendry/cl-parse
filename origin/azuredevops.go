@@ -26,12 +26,20 @@ func NewAzureDevOpsProvider(config Config) *AzureDevOpsProvider {
 }
 
 // createRequest creates an Azure DevOps API request with appropriate headers.
-func (a *AzureDevOpsProvider) createRequest(issueNumber string) (*http.Request, error) {
+func (a *AzureDevOpsProvider) createRequest(issueNumber string, isPullRequest bool) (*http.Request, error) {
 	url := fmt.Sprintf(
 		"https://dev.azure.com/%s/_apis/wit/workitems/%s?api-version=7.1",
 		a.org,
 		issueNumber,
 	)
+
+	if isPullRequest {
+		url = fmt.Sprintf(
+			"https://dev.azure.com/%s/_apis/git/pullrequests/%s?api-version=7.1",
+			a.org,
+			issueNumber,
+		)
+	}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -39,7 +47,7 @@ func (a *AzureDevOpsProvider) createRequest(issueNumber string) (*http.Request, 
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	encodedPat := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf(":%s", a.config.Token)))
+	encodedPat := base64.StdEncoding.EncodeToString(fmt.Appendf(nil, ":%s", a.config.Token))
 	if a.config.Token != "" {
 		req.Header.Set("Authorization", fmt.Sprintf("Basic %s", encodedPat))
 	}
@@ -48,8 +56,8 @@ func (a *AzureDevOpsProvider) createRequest(issueNumber string) (*http.Request, 
 }
 
 // GetIssue fetches work item details from Azure DevOps.
-func (a *AzureDevOpsProvider) GetIssue(issueNumber string) (*Issue, error) {
-	req, err := a.createRequest(issueNumber)
+func (a *AzureDevOpsProvider) GetIssue(issueNumber string, isPullRequest bool) (*Issue, error) {
+	req, err := a.createRequest(issueNumber, isPullRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +77,24 @@ func (a *AzureDevOpsProvider) GetIssue(issueNumber string) (*Issue, error) {
 			Title       string `json:"System.Title"`
 			Description string `json:"System.Description"`
 		} `json:"fields"`
+	}
+
+	var azurePrResponse struct {
+		ID          int    `json:"pullRequestId"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	}
+
+	if isPullRequest {
+		if err := json.NewDecoder(resp.Body).Decode(&azurePrResponse); err != nil {
+			return nil, fmt.Errorf("failed to decode pull request response: %w", err)
+		}
+
+		return &Issue{
+			Number: azurePrResponse.ID,
+			Title:  azurePrResponse.Title,
+			Body:   cleanDescription(azurePrResponse.Description),
+		}, nil
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&azureResponse); err != nil {

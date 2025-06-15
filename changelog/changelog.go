@@ -209,8 +209,8 @@ func parseCommitHashFromLink(link string) string {
 }
 
 func extractRelatedItems(text string, repoUrl string, token string) ([]*origin.Issue, error) {
-	regex := regexp.MustCompile(`#(\d+)`)
-	matches := regex.FindAllStringSubmatch(text, -1)
+	issueRegex := regexp.MustCompile(`[#!](\d+)`) // Updated regex to match both # and !
+	matches := issueRegex.FindAllStringSubmatch(text, -1)
 
 	seen := make(map[string]bool)
 	var items []*origin.Issue
@@ -223,9 +223,13 @@ func extractRelatedItems(text string, repoUrl string, token string) ([]*origin.I
 
 		for _, match := range matches {
 			if !seen[match[1]] {
-				issue, err := provider.GetIssue(match[1])
+				isPR := strings.HasPrefix(match[0], "!")
+
+				issue, err := provider.GetIssue(match[1], isPR)
 				if err != nil {
-					return nil, fmt.Errorf("failed to get issue details for #%s: %w", match[1], err)
+					return nil, fmt.Errorf("failed to get %s details for %s: %w",
+						map[bool]string{true: "PR", false: "issue"}[isPR],
+						match[0], err)
 				}
 				items = append(items, issue)
 				seen[match[1]] = true
@@ -246,8 +250,11 @@ func extractRelatedItems(text string, repoUrl string, token string) ([]*origin.I
 }
 
 func containsIssue(items []*origin.Issue, item *origin.Issue) bool {
+	if item == nil {
+		return false
+	}
 	for _, existing := range items {
-		if existing.Number == item.Number {
+		if existing != nil && existing.Number == item.Number {
 			return true
 		}
 	}

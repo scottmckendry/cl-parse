@@ -101,7 +101,7 @@ func TestGitHubProvider_GetIssue(t *testing.T) {
 		repo:  "cl-parse",
 	}
 
-	issue, err := provider.GetIssue("9")
+	issue, err := provider.GetIssue("9", false)
 	if err != nil {
 		t.Fatalf("GetIssue() error = %v", err)
 	}
@@ -175,7 +175,7 @@ func TestGitLabProvider_GetIssue(t *testing.T) {
 		project: "scottmckendry/test",
 	}
 
-	issue, err := provider.GetIssue("1")
+	issue, err := provider.GetIssue("1", false)
 	if err != nil {
 		t.Fatalf("GetIssue() error = %v", err)
 	}

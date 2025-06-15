@@ -41,7 +41,7 @@ func (g *GitLabProvider) createRequest(issueNumber string) (*http.Request, error
 }
 
 // GetIssue fetches issue details from GitLab
-func (g *GitLabProvider) GetIssue(issueNumber string) (*Issue, error) {
+func (g *GitLabProvider) GetIssue(issueNumber string, isPullRequest bool) (*Issue, error) {
 	type GitLabIssue struct {
 		IID         int    `json:"iid"`
 		Title       string `json:"title"`

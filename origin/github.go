@@ -45,7 +45,7 @@ func (g *GitHubProvider) createRequest(issueNumber string) (*http.Request, error
 }
 
 // GetIssue fetches issue details from GitHub.
-func (g *GitHubProvider) GetIssue(issueNumber string) (*Issue, error) {
+func (g *GitHubProvider) GetIssue(issueNumber string, isPullRequest bool) (*Issue, error) {
 	req, err := g.createRequest(issueNumber)
 	if err != nil {
 		return nil, err
