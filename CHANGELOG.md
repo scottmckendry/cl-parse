@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.0](https://github.com/scottmckendry/cl-parse/compare/v0.4.0...v0.5.0) (2025-06-15)
+
+
+### Features
+
+* **deps:** update module github.com/go-git/go-git/v5 ( v5.13.1 → v5.16.2 ) ([7b725c0](https://github.com/scottmckendry/cl-parse/commit/7b725c0da3bb54f90904d88d1d0ecc1bcba22c42))
+* **deps:** update module github.com/spf13/cobra ( v1.8.1 → v1.9.1 ) ([846213d](https://github.com/scottmckendry/cl-parse/commit/846213d4582d81de32e57747cb6afd021ae6892c))
+* support nixos with flake ([1a8be47](https://github.com/scottmckendry/cl-parse/commit/1a8be47b621ba938e5c9d72e348bd7f2e388a943))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/pelletier/go-toml/v2 ( v2.2.3 → v2.2.4 ) ([#14](https://github.com/scottmckendry/cl-parse/issues/14)) ([08faab1](https://github.com/scottmckendry/cl-parse/commit/08faab129f95132a3c0b646158f36178a0706f3a))
+* **origin:** support ssh git urls ([d09f5de](https://github.com/scottmckendry/cl-parse/commit/d09f5de99763f0f461cd0842587f7dc66f8ebb05))
+* **parser:** support azure devops style prs ([1a33648](https://github.com/scottmckendry/cl-parse/commit/1a33648112c7a9f0f72d3446fb8a9c23cd4f4d02))
+* update pinned deps ([f3c3fb0](https://github.com/scottmckendry/cl-parse/commit/f3c3fb05f6ee597a907bc6a5b451aba56bb84f7d))
+
 ## [0.4.0](https://github.com/scottmckendry/cl-parse/compare/v0.3.0...v0.4.0) (2025-01-14)
 
 
