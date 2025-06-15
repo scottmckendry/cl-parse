@@ -36,16 +36,16 @@ version: 0.4.0
 date: 2025-01-14T00:00:00Z
 compareUrl: https://github.com/scottmckendry/cl-parse/compare/v0.3.0...v0.4.0
 changes:
-    Features:
-        - description: "**cmd:** `format` option with new YAML & TOML outputs"
-          commit: 7ffb283
-        - description: "**origin:** add support for github issue lookup"
-          commit: 539c4cd
-          commitBody: "adds new flag --fetch-item-details to fetch related items\n\nResolves #2"
-          relatedItems:
-              - number: 2
-                title: "Feature: Programatically Fetch content from PRs and Issues"
-                body: "Add an option to support the lookup of PRs and issues..."
+  Features:
+    - description: "**cmd:** `format` option with new YAML & TOML outputs"
+      commit: 7ffb283
+    - description: "**origin:** add support for github issue lookup"
+      commit: 539c4cd
+      commitBody: "adds new flag --fetch-item-details to fetch related items\n\nResolves #2"
+      relatedItems:
+        - number: 2
+          title: "Feature: Programatically Fetch content from PRs and Issues"
+          body: "Add an option to support the lookup of PRs and issues..."
 ```
 
 ## ✨ Features
@@ -53,11 +53,11 @@ changes:
 - Parses conventional changelog formats
 - Supports multiple output formats (JSON, YAML, TOML)
 - Can fetch additional context from:
-    - Full commit messages
-    - Linked GitHub Issues
-    - GitHub Pull Requests
-    - Azure DevOps Work Items
-    - GitLab Issues and Merge Requests
+  - Full commit messages
+  - Linked GitHub Issues
+  - GitHub Pull Requests
+  - Azure DevOps Work Items
+  - GitLab Issues and Merge Requests
 
 ## 🚀 Supported Git Hosts
 
@@ -72,6 +72,38 @@ Pre-built binaries are available for most platforms on the [releases page](https
 ```bash
 git clone https://github.com/scottmckendry/cl-parse && cd cl-parse
 go install .
+```
+
+**Nix**
+
+Add to your flake inputs:
+
+```nix
+{
+  inputs.cl-parse.url = "github:scottmckendry/cl-parse";
+}
+```
+
+Then you can use it in your configuration:
+
+```nix
+{
+  inputs,
+  pkgs,
+  ...
+}:
+
+{
+  # Install as a system package
+  environment.systemPackages = [
+    inputs.cl-parse.packages.${pkgs.system}.default
+  ];
+
+  # OR with home-manager
+  home.packages = [
+    inputs.cl-parse.packages.${pkgs.system}.default
+  ];
+}
 ```
 
 ## 📖 Usage
