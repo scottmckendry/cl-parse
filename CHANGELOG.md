@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/scottmckendry/cl-parse/compare/v0.5.0...v0.5.1) (2025-06-15)
+
+
+### Bug Fixes
+
+* **ci:** flake hash generation ([f15c54f](https://github.com/scottmckendry/cl-parse/commit/f15c54f4f8f92449c6fa1b6ef7d43be8c2fdc292))
+
 ## [0.5.0](https://github.com/scottmckendry/cl-parse/compare/v0.4.0...v0.5.0) (2025-06-15)
 
 
