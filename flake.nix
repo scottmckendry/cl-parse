@@ -17,9 +17,9 @@
           owner = "scottmckendry";
           repo = "cl-parse";
           rev = "v0.5.1"; # x-release-please-version
-          sha256 = "sha256-koADS4ug6tEDda0MIol0zqy6J0pv0OOJ8cqQMk0Iytc=";
+          sha256 = "sha256-3e4sB62wYLKmexfSqhC6i+xkdGJrOPAgeEYWgfpT8bY";
         };
-        vendorHash = "sha256-kbWjGsqkRAAKptEV4ObtliA/TYEGMtqU1eb0zakZM18=";
+        vendorHash = "sha256-NsiJoag3wZyIZYdY3H9LAcTKDAJhDv5CLYKHNCtKdi0";
         goPackagePath = "github.com/scottmckendry/cl-parse";
         go = pkgs.go_1_24;
         doCheck = false; # skip tests (these rely on external network calls)
