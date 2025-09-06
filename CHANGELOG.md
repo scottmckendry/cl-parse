@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/scottmckendry/cl-parse/compare/v0.5.1...v0.6.0) (2025-09-06)
+
+
+### Features
+
+* **deps:** update module github.com/spf13/cobra ( v1.9.1 → v1.10.1 ) ([0ba071c](https://github.com/scottmckendry/cl-parse/commit/0ba071c07e82f3a4d8c68352ead76f65a5a805cc))
+
 ## [0.5.1](https://github.com/scottmckendry/cl-parse/compare/v0.5.0...v0.5.1) (2025-06-15)
 
 
