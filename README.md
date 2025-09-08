@@ -124,12 +124,26 @@ Flags:
       --fetch-item-details   fetch details for related items (e.g. GitHub issues & PRs)
   -f, --format string        output format (json, yaml, or toml) (default "json")
       --include-body         include the full commit body in changelog entry
+      --last int             limit output to the N most recent releases
+      --since-days int       limit output to releases within the last N days (UTC)
   -l, --latest              display the most recent version from the changelog
   -r, --release string      display the changelog entry for a specific release
       --token string        token for fetching related items
 ```
 
 ### 🌟 Examples
+
+Filter to the last 3 releases:
+
+```bash
+cl-parse --last 3 CHANGELOG.md
+```
+
+Filter to releases in the last 7 days (inclusive by day, UTC):
+
+```bash
+cl-parse --since-days 7 CHANGELOG.md
+```
 
 Get the latest release in JSON format:
 
