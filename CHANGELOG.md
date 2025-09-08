@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/scottmckendry/cl-parse/compare/v0.5.1...v0.6.0) (2025-09-08)
+
+
+### Features
+
+* add new filtering options for large changelogs ([d146b84](https://github.com/scottmckendry/cl-parse/commit/d146b8437dc74b40824b6e275b0c080131f2c4e5))
+* **deps:** update module github.com/spf13/cobra ( v1.9.1 → v1.10.1 ) ([0ba071c](https://github.com/scottmckendry/cl-parse/commit/0ba071c07e82f3a4d8c68352ead76f65a5a805cc))
+
+
+### Bug Fixes
+
+* include id prefixes in related items ([1b7a7f4](https://github.com/scottmckendry/cl-parse/commit/1b7a7f458424677bab961d121e8066bd6a9a4b0e))
+
 ## [0.5.1](https://github.com/scottmckendry/cl-parse/compare/v0.5.0...v0.5.1) (2025-06-15)
 
 
