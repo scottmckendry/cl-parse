@@ -204,9 +204,6 @@ func validateScopeOptions(o options) error {
 	if o.release != "" && (o.last > 0 || o.sinceDays > 0) {
 		return fmt.Errorf("--release cannot be combined with --last or --since-days")
 	}
-	if o.last > 0 && o.sinceDays > 0 {
-		return fmt.Errorf("--last cannot be combined with --since-days")
-	}
 	if o.last < 0 || o.sinceDays < 0 {
 		return fmt.Errorf("--last and --since-days must be positive integers")
 	}
