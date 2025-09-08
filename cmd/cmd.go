@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
@@ -20,6 +21,8 @@ type options struct {
 	version          bool
 	latest           bool
 	release          string
+	last             int
+	sinceDays        int
 	includeBody      bool
 	fetchItemDetails bool
 	token            string
@@ -64,14 +67,21 @@ var cmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		if err := validateScopeOptions(opts); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		filtered := filterEntries(entries, opts.last, opts.sinceDays, time.Now().UTC())
+
 		var outputErr error
 		switch {
 		case opts.latest:
-			outputErr = handleLatest(entries, opts.format)
+			outputErr = handleLatest(filtered, opts.format)
 		case opts.release != "":
-			outputErr = handleRelease(entries, opts.release, opts.format)
+			outputErr = handleRelease(filtered, opts.release, opts.format)
 		default:
-			outputErr = outputFormatted(entries, opts.format)
+			outputErr = outputFormatted(filtered, opts.format)
 		}
 
 		if outputErr != nil {
@@ -96,12 +106,16 @@ func init() {
 		Bool("fetch-item-details", false, "fetch details for related items (e.g. GitHub issues & PRs)")
 	cmd.Flags().String("token", "", "token for fetching related items")
 	cmd.Flags().StringP("format", "f", "json", "output format (json, yaml, or toml)")
+	cmd.Flags().Int("last", 0, "limit output to the N most recent releases")
+	cmd.Flags().Int("since-days", 0, "limit output to releases within the last N days (from today, UTC)")
 }
 
 func getOptions(cmd *cobra.Command) options {
 	version, _ := cmd.Flags().GetBool("version")
 	latest, _ := cmd.Flags().GetBool("latest")
 	release, _ := cmd.Flags().GetString("release")
+	last, _ := cmd.Flags().GetInt("last")
+	sinceDays, _ := cmd.Flags().GetInt("since-days")
 	includeBody, _ := cmd.Flags().GetBool("include-body")
 	fetchItemDetails, _ := cmd.Flags().GetBool("fetch-item-details")
 	token, _ := cmd.Flags().GetString("token")
@@ -111,6 +125,8 @@ func getOptions(cmd *cobra.Command) options {
 		version:          version,
 		latest:           latest,
 		release:          release,
+		last:             last,
+		sinceDays:        sinceDays,
 		includeBody:      includeBody,
 		fetchItemDetails: fetchItemDetails,
 		token:            token,
@@ -118,7 +134,7 @@ func getOptions(cmd *cobra.Command) options {
 	}
 }
 
-func marshalWithFormat(v interface{}, format string) ([]byte, error) {
+func marshalWithFormat(v any, format string) ([]byte, error) {
 	switch strings.ToLower(format) {
 	case "json":
 		return json.MarshalIndent(v, "", "  ")
@@ -131,7 +147,7 @@ func marshalWithFormat(v interface{}, format string) ([]byte, error) {
 	}
 }
 
-func outputFormatted(data interface{}, format string) error {
+func outputFormatted(data any, format string) error {
 	output, err := marshalWithFormat(data, format)
 	if err != nil {
 		return err
@@ -154,4 +170,45 @@ func handleRelease(entries []changelog.ChangelogEntry, release, format string) e
 		}
 	}
 	return fmt.Errorf("version %s not found in changelog", release)
+}
+
+func filterEntries(entries []changelog.ChangelogEntry, last, sinceDays int, now time.Time) []changelog.ChangelogEntry {
+	filtered := entries
+	if last > 0 && last < len(filtered) {
+		filtered = filtered[:last]
+	}
+
+	if sinceDays <= 0 {
+		return filtered
+	}
+
+	utcNow := now.UTC()
+	midnight := time.Date(utcNow.Year(), utcNow.Month(), utcNow.Day(), 0, 0, 0, 0, time.UTC)
+	cutoff := midnight.AddDate(0, 0, -sinceDays)
+
+	var filteredByCutoff []changelog.ChangelogEntry
+	for _, entry := range filtered {
+		if entry.Date.Before(cutoff) {
+			continue
+		}
+		filteredByCutoff = append(filteredByCutoff, entry)
+	}
+
+	return filteredByCutoff
+}
+
+func validateScopeOptions(o options) error {
+	if o.latest && (o.release != "" || o.last > 0 || o.sinceDays > 0) {
+		return fmt.Errorf("--latest cannot be combined with --release, --last, or --since-days")
+	}
+	if o.release != "" && (o.last > 0 || o.sinceDays > 0) {
+		return fmt.Errorf("--release cannot be combined with --last or --since-days")
+	}
+	if o.last > 0 && o.sinceDays > 0 {
+		return fmt.Errorf("--last cannot be combined with --since-days")
+	}
+	if o.last < 0 || o.sinceDays < 0 {
+		return fmt.Errorf("--last and --since-days must be positive integers")
+	}
+	return nil
 }
