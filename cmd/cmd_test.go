@@ -35,7 +35,8 @@ func TestFilterEntries(t *testing.T) {
 		{"sinceDays only inclusive", 3, 3, []string{"v5", "v4", "v3"}}, // cutoff 3 days ago includes v3
 		{"sinceDays only none", 0, 0, []string{"v5", "v4", "v3", "v2", "v1"}},
 		{"sinceDays window bigger", 0, 8, []string{"v5", "v4", "v3", "v2"}},
-		{"last applied before sinceDays", 3, 7, []string{"v5", "v4", "v3"}}, // last=3 gives v5,v4,v3; all within 7 days
+		{"last applied before sinceDays", 3, 7, []string{"v5", "v4", "v3"}},       // last=3 gives v5,v4,v3; all within 7 days
+		{"combined last and sinceDays filters", 4, 5, []string{"v5", "v4", "v3"}}, // last=4 -> v5..v2 then sinceDays=5 filters out v2
 	}
 
 	for _, tt := range tests {
