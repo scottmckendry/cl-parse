@@ -25,6 +25,9 @@ func NewGitLabProvider(config Config) *GitLabProvider {
 
 // createRequest creates a GitLab API request with appropriate headers
 func (g *GitLabProvider) createRequest(issueNumber string) (*http.Request, error) {
+	if len(issueNumber) > 0 && (issueNumber[0] == '#' || issueNumber[0] == '!') {
+		issueNumber = issueNumber[1:]
+	}
 	url := fmt.Sprintf("https://gitlab.com/api/v4/projects/%s/issues/%s",
 		url.PathEscape(g.project), issueNumber)
 
@@ -40,8 +43,9 @@ func (g *GitLabProvider) createRequest(issueNumber string) (*http.Request, error
 	return req, nil
 }
 
-// GetIssue fetches issue details from GitLab
-func (g *GitLabProvider) GetIssue(issueNumber string, isPullRequest bool) (*Issue, error) {
+// GetIssue fetches issue details from GitLab (currently only issues, not MRs).
+func (g *GitLabProvider) GetIssue(issueToken string) (*Issue, error) {
+	issueNumber := issueToken
 	type GitLabIssue struct {
 		IID         int    `json:"iid"`
 		Title       string `json:"title"`
@@ -67,7 +71,7 @@ func (g *GitLabProvider) GetIssue(issueNumber string, isPullRequest bool) (*Issu
 	}
 
 	return &Issue{
-		Number: gitlabIssue.IID,
+		Number: "#" + fmt.Sprintf("%d", gitlabIssue.IID),
 		Title:  gitlabIssue.Title,
 		Body:   gitlabIssue.Description,
 	}, nil

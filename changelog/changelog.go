@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -209,7 +208,7 @@ func parseCommitHashFromLink(link string) string {
 }
 
 func extractRelatedItems(text string, repoUrl string, token string) ([]*origin.Issue, error) {
-	issueRegex := regexp.MustCompile(`[#!](\d+)`) // Updated regex to match both # and !
+	issueRegex := regexp.MustCompile(`([#!])(\d+)`)
 	matches := issueRegex.FindAllStringSubmatch(text, -1)
 
 	seen := make(map[string]bool)
@@ -222,26 +221,31 @@ func extractRelatedItems(text string, repoUrl string, token string) ([]*origin.I
 		}
 
 		for _, match := range matches {
-			if !seen[match[1]] {
-				isPR := strings.HasPrefix(match[0], "!")
-
-				issue, err := provider.GetIssue(match[1], isPR)
+			prefix := match[1]
+			numStr := match[2]
+			fullToken := prefix + numStr
+			if !seen[fullToken] {
+				issue, err := provider.GetIssue(fullToken)
 				if err != nil {
-					return nil, fmt.Errorf("failed to get %s details for %s: %w",
-						map[bool]string{true: "PR", false: "issue"}[isPR],
-						match[0], err)
+					return nil, fmt.Errorf("failed to get related item details for %s: %w",
+						fullToken, err)
+				}
+				if issue != nil {
+					issue.Number = fullToken // preserve original token with prefix
 				}
 				items = append(items, issue)
-				seen[match[1]] = true
+				seen[fullToken] = true
 			}
 		}
 	} else {
-		// When repoUrl is empty, just create basic Issue objects with numbers
+		// When repoUrl is empty, just create basic Issue objects with tokens
 		for _, match := range matches {
-			num, _ := strconv.Atoi(match[1])
-			if !seen[match[1]] {
-				items = append(items, &origin.Issue{Number: num})
-				seen[match[1]] = true
+			prefix := match[1]
+			numStr := match[2]
+			fullToken := prefix + numStr
+			if !seen[fullToken] {
+				items = append(items, &origin.Issue{Number: fullToken})
+				seen[fullToken] = true
 			}
 		}
 	}
@@ -254,7 +258,7 @@ func containsIssue(items []*origin.Issue, item *origin.Issue) bool {
 		return false
 	}
 	for _, existing := range items {
-		if existing != nil && existing.Number == item.Number {
+		if existing != nil && existing.Number == item.Number { // compare full token
 			return true
 		}
 	}

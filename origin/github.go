@@ -26,6 +26,9 @@ func NewGitHubProvider(config Config) *GitHubProvider {
 
 // createRequest creates a GitHub API request with appropriate headers.
 func (g *GitHubProvider) createRequest(issueNumber string) (*http.Request, error) {
+	if len(issueNumber) > 0 && (issueNumber[0] == '#' || issueNumber[0] == '!') {
+		issueNumber = issueNumber[1:]
+	}
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/issues/%s",
 		g.owner, g.repo, issueNumber)
 
@@ -45,7 +48,7 @@ func (g *GitHubProvider) createRequest(issueNumber string) (*http.Request, error
 }
 
 // GetIssue fetches issue details from GitHub.
-func (g *GitHubProvider) GetIssue(issueNumber string, isPullRequest bool) (*Issue, error) {
+func (g *GitHubProvider) GetIssue(issueNumber string) (*Issue, error) {
 	req, err := g.createRequest(issueNumber)
 	if err != nil {
 		return nil, err
@@ -60,12 +63,17 @@ func (g *GitHubProvider) GetIssue(issueNumber string, isPullRequest bool) (*Issu
 	}
 	defer resp.Body.Close()
 
-	var issue Issue
-	if err := json.NewDecoder(resp.Body).Decode(&issue); err != nil {
+	var raw struct {
+		Number int    `json:"number"`
+		Title  string `json:"title"`
+		Body   string `json:"body"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	return &issue, nil
+	issue := &Issue{Number: "#" + fmt.Sprintf("%d", raw.Number), Title: raw.Title, Body: raw.Body}
+	return issue, nil
 }
 
 // parseGitHubURL extracts owner and repository name from a GitHub URL.

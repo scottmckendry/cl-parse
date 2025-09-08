@@ -118,7 +118,7 @@ func TestParse(t *testing.T) {
 							"basic feature #456",
 							"",
 							"",
-							[]*origin.Issue{{Number: 456}},
+							[]*origin.Issue{{Number: "#456"}},
 						),
 					},
 				}),

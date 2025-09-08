@@ -101,12 +101,12 @@ func TestGitHubProvider_GetIssue(t *testing.T) {
 		repo:  "cl-parse",
 	}
 
-	issue, err := provider.GetIssue("9", false)
+	issue, err := provider.GetIssue("#9")
 	if err != nil {
 		t.Fatalf("GetIssue() error = %v", err)
 	}
 
-	if issue.Number != 9 || issue.Title != "Test Issue" || issue.Body != "Test Body" {
+	if issue.Number != "#9" || issue.Title != "Test Issue" || issue.Body != "Test Body" {
 		t.Errorf(
 			"GetIssue() = %+v, want {Number: 9, Title: 'Test Issue', Body: 'Test Body'}",
 			issue,
@@ -175,12 +175,12 @@ func TestGitLabProvider_GetIssue(t *testing.T) {
 		project: "scottmckendry/test",
 	}
 
-	issue, err := provider.GetIssue("1", false)
+	issue, err := provider.GetIssue("#1")
 	if err != nil {
 		t.Fatalf("GetIssue() error = %v", err)
 	}
 
-	if issue.Number != 1 || issue.Title != "Test Issue" || issue.Body != "Test Body" {
+	if issue.Number != "#1" || issue.Title != "Test Issue" || issue.Body != "Test Body" {
 		t.Errorf(
 			"GetIssue() = %+v, want {Number: 1, Title: 'Test Issue', Body: 'Test Body'}",
 			issue,

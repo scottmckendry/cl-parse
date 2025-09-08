@@ -8,14 +8,14 @@ import (
 
 // Issue represents a work item or issue from a Git provider.
 type Issue struct {
-	Number int    `json:"number"          yaml:"number"          toml:"number"`
+	Number string `json:"number"          yaml:"number"          toml:"number"`
 	Title  string `json:"title,omitempty" yaml:"title,omitempty" toml:"title,omitempty"`
 	Body   string `json:"body,omitempty"  yaml:"body,omitempty"  toml:"body,omitempty"`
 }
 
 // IssueProvider defines the interface for fetching issue details from Git providers.
 type IssueProvider interface {
-	GetIssue(issueNumber string, isPullRequest bool) (*Issue, error)
+	GetIssue(issueToken string) (*Issue, error)
 }
 
 // Config contains the configuration needed to connect to a Git provider.

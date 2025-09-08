@@ -26,7 +26,11 @@ func NewAzureDevOpsProvider(config Config) *AzureDevOpsProvider {
 }
 
 // createRequest creates an Azure DevOps API request with appropriate headers.
-func (a *AzureDevOpsProvider) createRequest(issueNumber string, isPullRequest bool) (*http.Request, error) {
+func (a *AzureDevOpsProvider) createRequest(issueNumber string) (*http.Request, error) {
+	isPullRequest := len(issueNumber) > 0 && issueNumber[0] == '!'
+	if len(issueNumber) > 0 && (issueNumber[0] == '#' || issueNumber[0] == '!') {
+		issueNumber = issueNumber[1:]
+	}
 	url := fmt.Sprintf(
 		"https://dev.azure.com/%s/_apis/wit/workitems/%s?api-version=7.1",
 		a.org,
@@ -55,9 +59,9 @@ func (a *AzureDevOpsProvider) createRequest(issueNumber string, isPullRequest bo
 	return req, nil
 }
 
-// GetIssue fetches work item details from Azure DevOps.
-func (a *AzureDevOpsProvider) GetIssue(issueNumber string, isPullRequest bool) (*Issue, error) {
-	req, err := a.createRequest(issueNumber, isPullRequest)
+// GetIssue fetches work item or pull request details from Azure DevOps.
+func (a *AzureDevOpsProvider) GetIssue(issueNumber string) (*Issue, error) {
+	req, err := a.createRequest(issueNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -85,13 +89,13 @@ func (a *AzureDevOpsProvider) GetIssue(issueNumber string, isPullRequest bool) (
 		Description string `json:"description"`
 	}
 
+	isPullRequest := len(issueNumber) > 0 && issueNumber[0] == '!'
 	if isPullRequest {
 		if err := json.NewDecoder(resp.Body).Decode(&azurePrResponse); err != nil {
 			return nil, fmt.Errorf("failed to decode pull request response: %w", err)
 		}
-
 		return &Issue{
-			Number: azurePrResponse.ID,
+			Number: "!" + fmt.Sprintf("%d", azurePrResponse.ID),
 			Title:  azurePrResponse.Title,
 			Body:   cleanDescription(azurePrResponse.Description),
 		}, nil
@@ -102,7 +106,7 @@ func (a *AzureDevOpsProvider) GetIssue(issueNumber string, isPullRequest bool) (
 	}
 
 	return &Issue{
-		Number: azureResponse.ID,
+		Number: "#" + fmt.Sprintf("%d", azureResponse.ID),
 		Title:  azureResponse.Fields.Title,
 		Body:   cleanDescription(azureResponse.Fields.Description),
 	}, nil
