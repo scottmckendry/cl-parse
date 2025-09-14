@@ -15,7 +15,7 @@ import (
 	"cl-parse/git"
 )
 
-const VERSION = "0.6.0" // x-release-please-version
+const VERSION = "0.7.0" // x-release-please-version
 
 type options struct {
 	version          bool
