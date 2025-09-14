@@ -12,11 +12,11 @@
     {
       packages.${system}.default = pkgs.buildGoModule {
         pname = "cl-parse";
-        version = "0.6.0"; # x-release-please-version
+        version = "0.7.0"; # x-release-please-version
         src = pkgs.fetchFromGitHub {
           owner = "scottmckendry";
           repo = "cl-parse";
-          rev = "v0.6.0"; # x-release-please-version
+          rev = "v0.7.0"; # x-release-please-version
           sha256 = "sha256-3AyMSKmNofI2+ezP8mgD/lmt2m8Zm0pNma6p7qAfFJ4";
         };
         vendorHash = "sha256-/SL6FE1rX1xkJ6vpVJUms7HUnLNY6qq66jaYUbGWKsM";
