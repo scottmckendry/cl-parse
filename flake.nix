@@ -24,6 +24,15 @@
         go = pkgs.go_1_24;
         doCheck = false; # skip tests (these rely on external network calls)
 
+        # Install generated shell completions (bash, zsh, fish)
+        nativeBuildInputs = [ pkgs.installShellFiles ];
+        postInstall = ''
+          installShellCompletion --cmd cl-parse \
+            --bash <($out/bin/cl-parse completion bash) \
+            --zsh <($out/bin/cl-parse completion zsh) \
+            --fish <($out/bin/cl-parse completion fish)
+        '';
+
         meta = with pkgs.lib; {
           description = "Parse most changelog formats into common structured data formats like JSON, TOML, and YAML";
           homepage = "https://github.com/scottmckendry/cl-parse";
