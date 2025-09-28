@@ -1,9 +1,29 @@
 package origin
 
 import (
+	"io"
 	"net/http"
+	"strings"
 	"testing"
 )
+
+type rtFunc func(*http.Request) (*http.Response, error)
+
+func (f rtFunc) RoundTrip(r *http.Request) (*http.Response, error) {
+	return f(r)
+}
+
+func stubClient(json string) *http.Client {
+	return &http.Client{
+		Transport: rtFunc(func(r *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: 200,
+				Body:       io.NopCloser(strings.NewReader(json)),
+				Header:     make(http.Header),
+			}, nil
+		}),
+	}
+}
 
 func TestNewIssueProvider(t *testing.T) {
 	tests := []struct {
@@ -95,7 +115,7 @@ func TestParseGitHubURL(t *testing.T) {
 func TestGitHubProvider_GetIssue(t *testing.T) {
 	provider := &GitHubProvider{
 		BaseProvider: BaseProvider{
-			client: &http.Client{},
+			client: stubClient(`{"number":9,"title":"Test Issue","body":"Test Body"}`),
 		},
 		owner: "scottmckendry",
 		repo:  "cl-parse",
@@ -170,7 +190,7 @@ func TestParseGitLabURL(t *testing.T) {
 func TestGitLabProvider_GetIssue(t *testing.T) {
 	provider := &GitLabProvider{
 		BaseProvider: BaseProvider{
-			client: &http.Client{},
+			client: stubClient(`{"iid":1,"title":"Test Issue","description":"Test Body"}`),
 		},
 		project: "scottmckendry/test",
 	}
