@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/scottmckendry/cl-parse/compare/v0.6.0...v0.7.0) (2025-09-28)
+
+
+### Features
+
+* **flake:** install shell completions ([05c699f](https://github.com/scottmckendry/cl-parse/commit/05c699f12b2b18553c62e9c77e9ff96666e315d8))
+* **nix:** build cl-parse @ main ([2cb4872](https://github.com/scottmckendry/cl-parse/commit/2cb4872459b6391a2865d1151378e42cf4b9dc1c))
+
 ## [0.6.0](https://github.com/scottmckendry/cl-parse/compare/v0.5.1...v0.6.0) (2025-09-08)
 
 
