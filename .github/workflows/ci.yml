@@ -14,7 +14,7 @@ jobs:
         with:
           go-version: 1.25
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
+        uses: DeterminateSystems/nix-installer-action@2cb76beab460be7e44442c7ebdcbc30b638416df # main
       - name: Nix build (flake default)
         run: nix build .#default
       - name: Test
